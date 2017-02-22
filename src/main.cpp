@@ -71,16 +71,18 @@ int main(int argc, char* argv[]){
 	int n_sample = 0;
 	float train_correct = 0;
     // some common parameters
-	num_train =atoi(params[7]);// 31200;
-	num_CV = atoi(params[9]); //10400;
-	num_test = atoi(params[11]); //10400;
-	num_label = atoi(params[13]);//104
+	num_train =atoi(params[9]);// 31200;
+	num_CV = atoi(params[11]); //10400;
+	num_test = atoi(params[13]); //10400;
+	num_label = atoi(params[15]);//104
 	printf("\nnum train = %d, num CV = %d, num test = %d", num_train, num_CV, num_test);
 	printf("\nnum out = %d", num_label);
 	
 	int n_train = 1;
 	//cout<<"good!!"<<endl;
-	const char * fp = "paramTest";
+	
+	const char * fp = params[17];
+	printf("\nparameter file: %s", params[17]);
 	ReadParam(fp);
 
 
@@ -104,7 +106,8 @@ int main(int argc, char* argv[]){
 	//ReadTrainNetwork(6);
 	//ReadTrainNetwork(7);
 	cout<<num_weights<<endl;
-	int tobegin = 1;
+	
+	 int tobegin = atoi(params[1]);
 	if(tobegin != 1){
 	    readTBCNNParam2(tobegin,alpha,n_miniGDchange);
 	    n_miniGD = tobegin*num_train/batch_size;
@@ -113,11 +116,10 @@ int main(int argc, char* argv[]){
 	//-0.0170019
 	//0.617616
 	// write 
-
-	int nEpoch = atoi(params[1]);
-	int pmark = atoi(params[3]);
-	int mode = atoi(params[5]);
-	printf("\nEpoch =%d\n",nEpoch);
+	int nEpoch = atoi(params[3]);
+	int pmark = atoi(params[5]);
+	int mode = atoi(params[7]);
+	printf("\nBegin = %d, Epoch =%d\n", tobegin,nEpoch);
 	printf("\nmark pos = %d\n",  pmark);
 	if (mode == 0)
 		printf("\nmode = Probabilities\n"); //:"Output labels"
@@ -129,6 +131,9 @@ int main(int argc, char* argv[]){
 	printf("\nbegin test\n");	
 		
 	int t_start=clock();
+	
+	if (tobegin >= nEpoch)
+		return 0;
 	for (int epoch = tobegin; epoch <= nEpoch; ++ epoch) {
 		//break;
 		float J = 0;
@@ -311,6 +316,7 @@ int main(int argc, char* argv[]){
 			}
 
 		}
+		saveTBCNNParam2(nEpoch,alpha,n_miniGDchange);
 		//learn_rate *= 0.6;
 //		char des[50] = "param_pretrain";
 //		des[14] = '0' + epoch;

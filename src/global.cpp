@@ -129,7 +129,7 @@ void saveTBCNNParam2(int epoch, float alpha, bool n_miniGDchange)
 	cout<<"save param epoch = "<<epoch;
 	char s[10];
 
-	string strw = "/home/seke/lyx/TBCNN_Csmallnet/TBCNNParam/AllParam_";
+	string strw = "AllParam_";
 	sprintf(s, "%d", epoch);
 	string tmp;
 	tmp = s;
@@ -151,7 +151,7 @@ void readTBCNNParam2(int epoch,float alpha,bool n_miniGDchange)
 	cout<<"save param epoch = "<<epoch;
 	char s[10];
 
-	string strw = "/home/seke/lyx/TBCNN_Csmallnet/TBCNNParam/AllParam_";
+	string strw = "AllParam_";
 	sprintf(s, "%d", epoch);
 	string tmp;
 	tmp = s;

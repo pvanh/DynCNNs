@@ -1,3 +1,5 @@
+begin
+0
 num of epoch
 59
 mark point to write output
@@ -12,4 +14,6 @@ num_test
 10400
 output
 104
+parameter file
+paramTest
 // p1: epoch, p2: mark - export from this round, mode: 0 - export probabilities, 1- predicting results, 2-vector
