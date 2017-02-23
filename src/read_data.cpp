@@ -28,12 +28,19 @@ char * buf_test= new char [MAX_BUF];
 char * cursor_test;
 //char *config = "RNNBigDataFinal600";
 //data files
-const char * f_train = "./xy/data_train";
-const char * f_CV = "./xy/data_CV";
-const char * f_test = "./xy/data_test";
-const char * f_yCV = "./xy/data_yCV.txt";
-const char * f_ytest = "./xy/data_ytest.txt";
-const char * f_ytrain = "./xy/data_ytrain.txt";
+//const char * f_train = "./xy/data_train";
+//const char * f_CV = "./xy/data_CV";
+//const char * f_test = "./xy/data_test";
+//const char * f_yCV = "./xy/data_yCV.txt";
+//const char * f_ytest = "./xy/data_ytest.txt";
+//const char * f_ytrain = "./xy/data_ytrain.txt";
+
+char * f_train;
+char * f_CV;
+char * f_test;
+char * f_yCV;
+char * f_ytest;
+char * f_ytrain;
 	
 void DeleteClass(Layer ** layers, int len){
 	if (layers == NULL)
@@ -114,8 +121,8 @@ void ReadOneTestFile( int num_sample, Layer *** &net_array, int *& len){
 
 void ReadAllData( ){
 
-	printf("data files:\n");
-	printf("%s\n%s\n%s\n%s\n%s\n", f_train, f_ytrain, f_CV, f_yCV, f_test, f_ytest);
+	printf("data files (x_y - train -CV - test):\n");
+	printf("%s\n%s\n%s\n%s\n%s\n%s\n", f_train, f_ytrain, f_CV, f_yCV, f_test, f_ytest);
 
 	X_train    = new Layer **[1];
 //	X_trainB    = new Layer **[1];

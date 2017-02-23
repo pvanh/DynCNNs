@@ -4,8 +4,8 @@
 CPP      = g++.exe
 CC       = gcc.exe
 WINDRES  = windres.exe
-OBJ      = activation.o FFNN.o global.o main.o predict.o read_data.o file_io.o DESolver.o main_cnn.o main_decnn.o DE_CNN.o Z:/TBCNN_New/TBCNN/src/test.o test_loadnet.o
-LINKOBJ  = activation.o FFNN.o global.o main.o predict.o read_data.o file_io.o DESolver.o main_cnn.o main_decnn.o DE_CNN.o Z:/TBCNN_New/TBCNN/src/test.o test_loadnet.o
+OBJ      = activation.o FFNN.o global.o main.o predict.o read_data.o file_io.o DESolver.o main_cnn.o main_decnn.o DE_CNN.o test_loadnet.o
+LINKOBJ  = activation.o FFNN.o global.o main.o predict.o read_data.o file_io.o DESolver.o main_cnn.o main_decnn.o DE_CNN.o test_loadnet.o
 LIBS     = -L"C:/Dev-Cpp/MinGW64/lib" -L"C:/Dev-Cpp/MinGW64/x86_64-w64-mingw32/lib" -static-libgcc
 INCS     = -I"C:/Dev-Cpp/MinGW64/include" -I"C:/Dev-Cpp/MinGW64/x86_64-w64-mingw32/include" -I"C:/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.9.2/include" -I"C:/BLAS/CBLAS/include"
 CXXINCS  = -I"C:/Dev-Cpp/MinGW64/include" -I"C:/Dev-Cpp/MinGW64/x86_64-w64-mingw32/include" -I"C:/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.9.2/include" -I"C:/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.9.2/include/c++" -I"C:/BLAS/CBLAS/include"
@@ -56,9 +56,6 @@ main_decnn.o: main_decnn.cpp
 
 DE_CNN.o: DE_CNN.cpp
 	$(CPP) -c DE_CNN.cpp -o DE_CNN.o $(CXXFLAGS)
-
-Z:/TBCNN_New/TBCNN/src/test.o: Z:/TBCNN_New/TBCNN/src/test.cpp
-	$(CPP) -c Z:/TBCNN_New/TBCNN/src/test.cpp -o Z:/TBCNN_New/TBCNN/src/test.o $(CXXFLAGS)
 
 test_loadnet.o: test_loadnet.cpp
 	$(CPP) -c test_loadnet.cpp -o test_loadnet.o $(CXXFLAGS)

@@ -1,7 +1,7 @@
 [Project]
 FileName=CNN.dev
 Name=CNN
-UnitCount=20
+UnitCount=18
 Type=1
 Ver=2
 ObjFiles=
@@ -211,7 +211,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit18]
-FileName=Z:\TBCNN_New\TBCNN\src\test.cpp
+FileName=test_loadnet.cpp
 CompileCpp=1
 Folder=
 Compile=1

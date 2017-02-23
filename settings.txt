@@ -16,4 +16,16 @@ output
 104
 parameter file
 paramTest
+fx_train (x -training file)
+data_train
+fx_CV (x - validation file)
+data_CV
+fx_test (x - test file)
+data_test
+fy_train (y - training file)
+data_ytrain.txt
+fy_CV (y- validation file)
+data_yCV.txt
+fy_test (y- test file)
+data_ytest.txt
 // p1: epoch, p2: mark - export from this round, mode: 0 - export probabilities, 1- predicting results, 2-vector

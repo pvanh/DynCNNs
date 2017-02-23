@@ -22,11 +22,16 @@
 using namespace std;
 
 //void saveParam(int epoch);
-
+extern char * f_train;
+extern char * f_CV;
+extern char * f_test;
+extern char * f_yCV;
+extern char * f_ytest;
+extern char * f_ytrain;
 Layer ** global;
 int main(int argc, char* argv[]){
 	// read parameters from setting file
-	char* params[40];
+	char* params[80];
 	getparameters(params);
 	
 	float learn_rate;
@@ -80,9 +85,8 @@ int main(int argc, char* argv[]){
 	
 	int n_train = 1;
 	//cout<<"good!!"<<endl;
+	char * fp = params[17]; 
 	
-	const char * fp = params[17];
-	printf("\nparameter file: %s", params[17]);
 	ReadParam(fp);
 
 
@@ -95,7 +99,26 @@ int main(int argc, char* argv[]){
 		Bcoef_AdaGrad[i] = K;
 	}
 	cout<<"Begin Read"<<endl;
-
+ 	
+ 	// data files
+ 	f_train = (char*) malloc(sizeof(char) * 300) ;
+    snprintf( f_train, 300, "./xy/%s",params[19]);
+    
+	f_CV = (char*) malloc(sizeof(char) * 300) ;
+	snprintf( f_CV , 300, "./xy/%s",params[21]);
+	
+	f_test = (char*) malloc(sizeof(char) * 300) ;
+	snprintf( f_test , 300, "./xy/%s",params[23]);
+	
+	f_ytrain = (char*) malloc(sizeof(char) * 300) ;
+	snprintf( f_ytrain , 300, "./xy/%s",params[25]);
+	
+	f_yCV = (char*) malloc(sizeof(char) * 300) ;
+	snprintf( f_yCV , 300, "./xy/%s", params[27]);
+	
+	f_ytest = (char*) malloc(sizeof(char) * 300) ;
+	snprintf( f_ytest , 300, "./xy/%s",params[29]);
+	
 	ReadAllData();
 	cout << "INFO: Data loaded" << endl;
 
@@ -110,6 +133,7 @@ int main(int argc, char* argv[]){
 	 int tobegin = atoi(params[1]);
 	if(tobegin != 1){
 	    readTBCNNParam2(tobegin,alpha,n_miniGDchange);
+	    tobegin++;
 	    n_miniGD = tobegin*num_train/batch_size;
 	}
 	//write :
@@ -316,7 +340,6 @@ int main(int argc, char* argv[]){
 			}
 
 		}
-		saveTBCNNParam2(nEpoch,alpha,n_miniGDchange);
 		//learn_rate *= 0.6;
 //		char des[50] = "param_pretrain";
 //		des[14] = '0' + epoch;
@@ -324,6 +347,7 @@ int main(int argc, char* argv[]){
 //		SaveParam( des );
 
 	}
+	saveTBCNNParam2(nEpoch,alpha,n_miniGDchange);
 	int t_stop =clock();
 	cout<<"\nrunning time: "<< t_stop - t_start;
 	cout << "\ndone" << endl;

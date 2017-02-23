@@ -45,7 +45,7 @@ void RandomInitParam(){
 }
 
 
-void ReadParam(const char * filepath){
+void ReadParam(char* filepath){
 	FILE *infile = fopen(filepath, "rb");
 	cout<< "\nLoad parameters from "<< filepath<<flush;
 
@@ -53,8 +53,6 @@ void ReadParam(const char * filepath){
 		cout << "ERR: Can't load parameters; file name : " << filepath << endl;
 		exit(1);
 	}
-
-
 
 	fread((void *) &num_weights, sizeof(int), 1, infile);
 	fread((void *) &num_biases, sizeof(int), 1, infile);

@@ -56,7 +56,7 @@ extern int batch_size;
 
 void RandomInitParam();
 
-void ReadParam(const char * filepath);
+void ReadParam(char* filepath);
 void SaveParam(const char * filepath);
 void saveTBCNNParam2(int epoch,float alpha,bool n_miniGDchange);
 void readTBCNNParam2(int epoch,float alpha,bool n_miniGDchange);
