@@ -84,7 +84,7 @@ def ConstructTreeConvolution(graph,word_dict, numFea, numCon, numDis, numOut, \
         num_Pre = numCon[c]
         pre_layer = current_layer
 
-    pool = Lay.PoolLayer('pooling', numCon)
+    pool = Lay.PoolLayer('pooling', numCon[-1])
     layers.append(pool)
     # connect from convolution ---> pooling
     for key in pre_layer:
