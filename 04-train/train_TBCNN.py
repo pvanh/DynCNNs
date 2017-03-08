@@ -137,5 +137,5 @@ print 'Bias', len(Biases)
 # 17940
 # 1544
 #
-write_param.write_binary('../paramTest', Weights, Biases)
+write_param.write_binary('../paramTest_Conv30_Dis20', Weights, Biases)
 print 'Done!'

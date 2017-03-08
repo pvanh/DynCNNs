@@ -1,15 +1,19 @@
+import json
 import random
 import struct
 
 import constructNetWork_GCNN as TC
 import Data_IO
 import cPickle as p
+
+import Graph
 from nn import serialize
 
 import sys, os
+import gcnn_params as params
 
 sys.path.append('../nn')
-datapath ='C:/Users/anhpv/Desktop/CFG_Virus/'
+datapath = params.datapath
 
 from InitParam import *
 
@@ -17,14 +21,14 @@ import numpy as np
 
 sys.setrecursionlimit(1000000)
 
-word_dict, vectors, numFea = Data_IO.LoadVocab(vocabfile=datapath + 'w2v_random.txt')
+word_dict, vectors, numFea = Data_IO.LoadVocab(vocabfile=datapath + 'tokvec.txt')
 print 'Vocab length =', len(word_dict)
 print 'Embedding size =', numFea
 
-numDis = 10
-numOut = 2
+numDis = params.numDis
+numOut = params.numOut
 
-numCon =[2,3,4]
+numCon = params.numCon
 
 np.random.seed(314)
 
@@ -80,7 +84,7 @@ def InitByNodes(graph, word_dict):
     #                              Wconv_root, Wconv_neighbor, Bconv, \
     #                              Wdis, Woutput, Bdis, Boutput
     #                              ):
-    layers = TC.ConstructTreeConvolution(graph, word_dict, numFea, numCon, numDis, numOut, \
+    layers = TC.ConstructGraphConvolution(graph, word_dict, numFea, numCon, numDis, numOut, \
                                  Wconv_root, Wconv_neighbor, Bconv, \
                                  Wdis, Woutput, Bdis, Boutput
                                  )
@@ -88,199 +92,69 @@ def InitByNodes(graph, word_dict):
 
     return layers
 
-# def ConstructNetworksFromFile(datafile='',targetdir='', prefix ='', classlabel =1, networks=[]):
-#     file = open(datafile, "r")
-#     idx =0
-#     for line in file:
-#
-#         layers = InitNetbyText(text=line)
-#         networks.append((layers, classlabel-1))
-#         idx = idx +1
-#         if idx % 1000==0:
-#             print idx
-        # if (idx>10):
-        #     break
-
-        # netfile =str(idx)
-        # directory = targetdir + str(classlabel)
-        # if not os.path.exists(directory):
-        #     os.makedirs(directory)
-        # serialize.serialize(layers, directory + '/'+prefix+'_' + netfile)
-def WriteNet(f =None, layers=None):
-    num_lay = struct.pack('i', len(layers))
-    if num_lay <= 2:
-        print 'error'
-    f.write(num_lay)
-
-    num_con = 0
-
-    #################################
-    # preprocessing, compute some indexes
-    for i, layer in enumerate(layers):
-        layer.idx = i
-        num_con += len(layer.connectUp)
-        for (icon, con) in enumerate(layer.connectDown):
-            con.ydownid = icon
-
-    num_con = struct.pack('i', num_con)
-    f.write(num_con)
-
-    #################################
-    # layers
-
-    for layer in layers:
-        # name
-        # = struct.pack('s', layer.name )
-        # numUnit
-        tmp = struct.pack('i', layer.numUnit)
-        f.write(tmp)
-        # numUp
-        tmp = struct.pack('i', len(layer.connectUp))
-        f.write(tmp)
-        # numDown
-        tmp = struct.pack('i', len(layer.connectDown))
-        f.write(tmp)
-
-        if layer.layer_type == 'p':  # pooling
-            if layer.poolType == 'max':
-                tlayer = 'x'
-            elif layer.poolType == 'sum':
-                tlayer = 'u'
-            tmp = struct.pack('c', tlayer)
-            f.write(tmp)
-
-        elif layer.layer_type == 'o':  # ordinary nodes
-
-            if layer.act == 'embedding':
-                tlayer = 'e'
-            elif layer.act == 'autoencoding':
-                tlayer = 'a'
-            elif layer.act == 'convolution':
-                tlayer = 'c'
-            elif layer.act == 'combination':
-                tlayer = 'b'
-            elif layer.act == "ReLU":
-                tlayer = 'r'
-            elif layer.act == 'softmax':
-                tlayer = 's'
-            elif layer.act == 'hidden':
-                tlayer = 'h'
-            elif layer.act == 'recursive':
-                tlayer = 'v'
-            else:
-                print "error"
-                return layer
-            tmp = struct.pack('c', tlayer)
-
-            f.write(tmp)
-            bidx = -1
-            if layer.bidx != None:
-                bidx = layer.bidx
-                bidx = bidx[0]
-
-            tmp = struct.pack('i', bidx)
-            f.write(tmp)
-
-    #########################
-    # connections
-    for layer in layers:
-        for xupid, con in enumerate(layer.connectUp):
-            # xlayer idx
-            tmp = struct.pack('i', layer.idx)
-
-            f.write(tmp)
-            # ylayer idx
-            tmp = struct.pack('i', con.ylayer.idx)
-            f.write(tmp)
-            # idx in x's connectUp
-            tmp = struct.pack('i', xupid)
-            f.write(tmp)
-            # idx in y's connectDown
-            tmp = struct.pack('i', con.ydownid)
-            f.write(tmp)
-            if con.ylayer.layer_type == 'p':
-                Widx = -1
-            else:
-                Widx = con.Widx
-                Widx = Widx[0]
-
-            tmp = struct.pack('i', Widx)
-            f.write(tmp)
-            if Widx >= 0:
-                tmp = struct.pack('f', con.Wcoef)
-                f.write(tmp)
-def testNet(filename):
-    graph = Data_IO.getGraph(filename=filename)
-
-    layers = InitByNodes(graph = graph , word_dict = word_dict)
-    print 'Totally:', len(layers), 'layer(s)'
-    for l in layers:
-        if hasattr(l, 'bidx') and l.bidx is not None:
-            print l.name, '\tBidx', l.bidx[0], '\tlen biases=', len(l.bidx)
-        else:
-            print l.name
-
-
-        print "    Down:"
-        for c in l.connectDown:
-            if hasattr(c, 'Widx'):
-                print "        ", c.xlayer.name, " -> ", '|', \
-                    '(xnum= ', c.xnum, ', ynum= ', c.ynum, '), Wid = ', c.Widx[0]
-            else:
-                print "        ", c.xlayer.name, " -> ", '|', \
-                    '(xnum= ', c.xnum, ', ynum= ', c.ynum, ')'
-
-
-
+def constructNetFromJson(jsonFile='', labelclass=1): # 1: non-virus, 2: virus
+    networks=[]
+    with open(jsonFile, 'r') as f:
+        jsonObjs = json.load(f)
+        for obj in jsonObjs:
+            graph = Graph.load(obj)
+            g_net = InitByNodes(graph=graph, word_dict=word_dict)
+            networks.append((g_net, labelclass-1))
+    return networks
 
 if __name__ == "__main__":
 
-    g = Data_IO.getGraph(filename=datapath+'debug.exe_model.dot')
-    g.show()
-    testNet(filename=datapath+'debug.exe_model.dot')
+    # g = Data_IO.getGraph(filename=datapath+'test.dot')
+    # g.show()
+    # testNet(filename=datapath+'test.dot')
+
+    datafiles = params.datafiles
+
+    train_net =[]
+    test_net =[]
+    # training
+    net = constructNetFromJson(jsonFile=datafiles['train_nonvirus'],labelclass=1)
+    train_net.append(net)
+    net = constructNetFromJson(jsonFile=datafiles['train_virus'], labelclass=2)
+    train_net.append(net)
+    #testing
+    net = constructNetFromJson(jsonFile=datafiles['test_nonvirus'], labelclass=1)
+    test_net.append(net)
+    net = constructNetFromJson(jsonFile=datafiles['test_virus'], labelclass=2)
+    test_net.append(net)
     # # write network
     # np.random.seed(314159)
     # np.random.shuffle(networks)
     #
     # print 'networks =',len(networks)
     # numTrain = int(.7 * len(networks))
-    # print 'numTrain : ', numTrain
-    # print 'numTest : ', len(networks) - numTrain
-    #
-    # f = file(datapath+'xy/' + 'data_train', 'wb')
-    # f_y = file(datapath+'xy/' + 'data_ytrain.txt', 'w')
-    # for i in xrange(0, numTrain):
-    #     (net, ti) = networks[i]
-    #     #write net
-    #     WriteNet(f, net)
-    #     # print ti
-    #     f_y.write(str(ti) + '\n')
-    # f.close()
-    # f_y.close()
-    #
-    # f = file(datapath+'xy/' +  'data_CV', 'wb')
-    # f_y = file(datapath+'xy/' + 'data_yCV.txt', 'w')
-    #
-    # for i in xrange(numTrain, len(networks)):
-    #     (net, ti) = networks[i]
-    #     #write net
-    #     WriteNet(f, net)
-    #     #write ti
-    #     f_y.write(str(ti) + '\n')
-    # f.close()
-    # f_y.close()
-    #
-    # f = file(datapath+'xy/' + 'data_test', 'wb')
-    # f_y = file(datapath+'xy/' + 'data_ytest.txt', 'w')
-    #
-    # for i in xrange(numTrain, len(networks)):
-    #     (net, ti) = networks[i]
-    #     # write net
-    #     WriteNet(f, net)
-    #     # write ti
-    #     f_y.write(str(ti) + '\n')
-    # f.close()
-    # f_y.close()
+    print 'numTrain : ', len(train_net)
+    print 'numTest : ', len(test_net)
+    np.random.shuffle(train_net)
+
+    f = file(datapath+'xy/' + 'data_train', 'wb')
+    f_y = file(datapath+'xy/' + 'data_ytrain.txt', 'w')
+    for i in xrange(0, len(train_net)):
+        (net, ti) = train_net[i]
+        #write net
+        Data_IO.WriteNet(f, net)
+        # print ti
+        f_y.write(str(ti) + '\n')
+    f.close()
+    f_y.close()
+
+    f = file(datapath+'xy/' +  'data_test', 'wb')
+    f_y = file(datapath+'xy/' + 'data_ytest.txt', 'w')
+    for i in xrange(0, len(test_net)):
+        (net, ti) = test_net[i]
+        #write net
+        Data_IO.WriteNet(f, net)
+        #write ti
+        f_y.write(str(ti) + '\n')
+    f.close()
+    f_y.close()
+
+
 
 
 

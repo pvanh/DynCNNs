@@ -5,12 +5,15 @@ Created on Tue May 20 16:01:35 2014
 @author: mou
 """
 # settings
-ignoreDecl = True # prune declaration branches
-reConstruct = True # rename While, DoWhile, For ==> Loop
+ignoreDecl = False # prune declaration branches
+reConstruct = False # rename While, DoWhile, For ==> Loop
 tokenMap ='../tokenMap.txt'
-datadir =  'D:/data/original_data/'
-targetdir = 'D:/data/prun_semantic/TBCNN_RvNN/network/'
+# datadir =  'D:/data/original_data/'
+# targetdir = 'D:/data/prun_semantic/TBCNN_RvNN/network/'
 #targetdir ='C:/Users/anhpv/Desktop/RNN_Networks/'
+# data dir for stack overflow data
+datadir = 'D:/StackOverFlowData/Data/Experiments/data/'
+targetdir = 'D:/StackOverFlowData/Data/Experiments/TBCNN/network/'
 
 margin = 1
 learnRate = 0.0025 # 0.0001
@@ -29,7 +32,7 @@ encounterNAN = False
 # for numerical gradient checking
 
 numFea = 30#200
-numCon = 600 # 50
+numCon = 30 # 50
 numRecur = 600 #num recursive
 numDis = 100#600 # 50
 numOut = 2#104

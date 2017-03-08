@@ -1,3 +1,5 @@
+batch
+100
 begin
 0
 num of epoch

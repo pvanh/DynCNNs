@@ -250,8 +250,26 @@ def testNet():
             else:
                 print "        ", c.xlayer.name, " -> ", '|', \
                     '(xnum= ', c.xnum, ', ynum= ', c.ynum, ')'
+def ConstructNetworksForTest(testfile='', targetdir ='',netfile='')  :
+    networks =[]
+    ConstructNetworksFromFile(datafile=testfile, targetdir='', prefix='',
+                              classlabel=1, networks=networks)
+
+    # write networks
+    f = file(targetdir+netfile+'_x', 'wb')
+    f_y = file(targetdir+netfile+'_y', 'w')
+    for i in xrange(0, len(networks)):
+        (net, ti) = networks[i]
+        #write net
+        WriteNet(f, net)
+        # print ti
+        f_y.write(str(ti) + '\n')
+    f.close()
+    f_y.close()
+
+
 if __name__ == "__main__":
-    testNet()
+    #testNet()
     # targetdir = datapath+'networks/'
     # networks =[]
     # # #positive file
@@ -259,6 +277,11 @@ if __name__ == "__main__":
     # # #negative file
     # ConstructNetworksFromFile(datafile=datapath + 'negative.training-data.txt', targetdir=targetdir, prefix='neg', classlabel=2, networks=networks)
     #
+    # # test
+
+    for onefile in os.listdir(datapath+'testdata/'):
+        ConstructNetworksForTest(testfile=datapath+'testdata/'+onefile, targetdir=datapath+'testnet/', netfile=onefile)
+
     # # write network
     # np.random.seed(314159)
     # np.random.shuffle(networks)

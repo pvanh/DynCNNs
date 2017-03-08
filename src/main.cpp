@@ -46,11 +46,11 @@ int main(int argc, char* argv[]){
 	float beta = 0.0;
 	
 	cout << "WARNING: no parameters" << endl;
-	batch_size = 100;
+	batch_size =atoi(params[1]);
 	C_weights = 0.000001;
 	
-	alpha = 0.1;
-	beta = 0.7;
+	alpha = atof(params[33]); //0.1
+	beta = atof(params[35]);//0.7
 	//beta = 0;
 	p_dropout1 = 0.5;
 	p_dropout2 = 0;
@@ -65,8 +65,8 @@ int main(int argc, char* argv[]){
 
 	K *= (batch_size * batch_size );
 
-
-	cout << "batch = " << batch_size << "; C_weights = " <<
+	cout << "\nalpha = " << alpha<<"; beta = "<<beta;
+	cout << "\nbatch = " << batch_size << "; C_weights = " <<
 			C_weights << "; learn_rate = " << learn_rate << endl;
 	//"; P(c/h dropout) = " << p_dropout1 <<
 		//	"; P(a/ae dropout) = " << p_dropout2<<endl;
@@ -76,16 +76,16 @@ int main(int argc, char* argv[]){
 	int n_sample = 0;
 	float train_correct = 0;
     // some common parameters
-	num_train =atoi(params[9]);// 31200;
-	num_CV = atoi(params[11]); //10400;
-	num_test = atoi(params[13]); //10400;
-	num_label = atoi(params[15]);//104
+	num_train =atoi(params[11]);// 31200;
+	num_CV = atoi(params[13]); //10400;
+	num_test = atoi(params[15]); //10400;
+	num_label = atoi(params[17]);//104
 	printf("\nnum train = %d, num CV = %d, num test = %d", num_train, num_CV, num_test);
 	printf("\nnum out = %d", num_label);
 	
 	int n_train = 1;
 	//cout<<"good!!"<<endl;
-	char * fp = params[17]; 
+	char * fp = params[19]; 
 	
 	ReadParam(fp);
 
@@ -102,22 +102,22 @@ int main(int argc, char* argv[]){
  	
  	// data files
  	f_train = (char*) malloc(sizeof(char) * 300) ;
-    snprintf( f_train, 300, "./xy/%s",params[19]);
+    snprintf( f_train, 300, "./xy/%s",params[21]);
     
 	f_CV = (char*) malloc(sizeof(char) * 300) ;
-	snprintf( f_CV , 300, "./xy/%s",params[21]);
+	snprintf( f_CV , 300, "./xy/%s",params[23]);
 	
 	f_test = (char*) malloc(sizeof(char) * 300) ;
-	snprintf( f_test , 300, "./xy/%s",params[23]);
+	snprintf( f_test , 300, "./xy/%s",params[25]);
 	
 	f_ytrain = (char*) malloc(sizeof(char) * 300) ;
-	snprintf( f_ytrain , 300, "./xy/%s",params[25]);
+	snprintf( f_ytrain , 300, "./xy/%s",params[27]);
 	
 	f_yCV = (char*) malloc(sizeof(char) * 300) ;
-	snprintf( f_yCV , 300, "./xy/%s", params[27]);
+	snprintf( f_yCV , 300, "./xy/%s", params[29]);
 	
 	f_ytest = (char*) malloc(sizeof(char) * 300) ;
-	snprintf( f_ytest , 300, "./xy/%s",params[29]);
+	snprintf( f_ytest , 300, "./xy/%s",params[31]);
 	
 	ReadAllData();
 	cout << "INFO: Data loaded" << endl;
@@ -130,19 +130,18 @@ int main(int argc, char* argv[]){
 	//ReadTrainNetwork(7);
 	cout<<num_weights<<endl;
 	
-	 int tobegin = atoi(params[1]);
+	 int tobegin = atoi(params[3]);
 	if(tobegin != 1){
 	    readTBCNNParam2(tobegin,alpha,n_miniGDchange);
-	    tobegin++;
 	    n_miniGD = tobegin*num_train/batch_size;
 	}
 	//write :
 	//-0.0170019
 	//0.617616
 	// write 
-	int nEpoch = atoi(params[3]);
-	int pmark = atoi(params[5]);
-	int mode = atoi(params[7]);
+	int nEpoch = atoi(params[5]);
+	int pmark = atoi(params[7]);
+	int mode = atoi(params[9]);
 	printf("\nBegin = %d, Epoch =%d\n", tobegin,nEpoch);
 	printf("\nmark pos = %d\n",  pmark);
 	if (mode == 0)
@@ -156,8 +155,44 @@ int main(int argc, char* argv[]){
 		
 	int t_start=clock();
 	
-	if (tobegin >= nEpoch)
+	if (tobegin >= nEpoch) // test mode
+	{
+		// write to file
+		FILE *f_vectest, *f_veccv, *f_vectrain,*f_probcv, *f_probtest;
+		char cv_vec[300];
+        snprintf( cv_vec, 300, "vec_cv_r%d.txt",tobegin);
+        
+		char test_vec[300];
+        snprintf( test_vec, 300, "vec_test_r%d.txt",tobegin);
+        
+        char train_vec[300];
+        snprintf( train_vec, 300, "vec_train_r%d.txt",tobegin);
+        
+		char cv_prob[300];
+        snprintf( cv_prob, 300, "prob_cv_r%d.txt",tobegin);
+
+		char test_prob[300];
+        snprintf( test_prob, 300, "prob_test_r%d.txt",tobegin);
+        
+		f_vectest = fopen(test_vec, "w");
+		f_veccv = fopen(cv_vec, "w");
+		f_vectrain = fopen(train_vec, "w");
+		f_probcv = fopen(cv_prob, "w");
+		f_probtest = fopen(test_prob, "w");
+		
+
+		predictCV(y_CV, num_CV, f_veccv, f_probcv, mode);
+		predictTest(y_test, num_test, f_vectest, f_probtest,mode);
+		predictTrain(y_train, num_train, f_vectrain, mode);
+		
+		fclose(f_vectest);
+		fclose(f_veccv);
+		fclose(f_vectrain);
+		fclose(f_probcv);
+		fclose(f_probtest);
 		return 0;
+	}
+	
 	for (int epoch = tobegin; epoch <= nEpoch; ++ epoch) {
 		//break;
 		float J = 0;
@@ -181,49 +216,9 @@ int main(int argc, char* argv[]){
 			if (i == num_train-1) {
 				cout << "Epoch = "<< epoch<<" i = "<<i;
 				
+				predictCV(y_CV, num_CV, NULL, NULL,0);
+				predictTest(y_test, num_test, NULL,NULL,0);
 				
-				
-				if(epoch>=pmark)
-				{
-					// write to file
-					FILE *f_vectest, *f_veccv, *f_vectrain,*f_probcv, *f_probtest;
-					char cv_vec[300];
-                    snprintf( cv_vec, 300, "vec_cv_r%d.txt",epoch);
-                    
-					char test_vec[300];
-                    snprintf( test_vec, 300, "vec_test_r%d.txt",epoch);
-                    
-                    char train_vec[300];
-                    snprintf( train_vec, 300, "vec_train_r%d.txt",epoch);
-                    
-					char cv_prob[300];
-                    snprintf( cv_prob, 300, "prob_cv_r%d.txt",epoch);
-
-					char test_prob[300];
-                    snprintf( test_prob, 300, "prob_test_r%d.txt",epoch);
-                    
-					f_vectest = fopen(test_vec, "w");
-					f_veccv = fopen(cv_vec, "w");
-					f_vectrain = fopen(train_vec, "w");
-					f_probcv = fopen(cv_prob, "w");
-					f_probtest = fopen(test_prob, "w");
-					
-	
-					predictCV(y_CV, num_CV, f_veccv, f_probcv, mode);
-					predictTest(y_test, num_test, f_vectest, f_probtest,mode);
-					predictTrain(y_train, num_train, f_vectrain, mode);
-					
-					fclose(f_vectest);
-					fclose(f_veccv);
-					fclose(f_vectrain);
-					fclose(f_probcv);
-					fclose(f_probtest);
-				}
-				else
-				{
-					predictCV(y_CV, num_CV, NULL, NULL,0);
-					predictTest(y_test, num_test, NULL,NULL,0);
-				}
 				cout <<  "  trainerror : " <<  J / n_train<<"  train accuracy : "<<train_correct/n_train<< endl;
 				n_train = 0;J = 0;
 				train_correct = 0;

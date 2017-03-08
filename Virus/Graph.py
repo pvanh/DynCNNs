@@ -1,19 +1,42 @@
 import sys
 
+import re
 
-class GNode:
-    id = None
-    name = None
-    value = None
-    content =None
 
-    def __init__(self, id=None, name='', value='', content=''):
+class GVertex:
+    def __init__(self, id=None, name='', token='', toktype='ASM', content=''):
         self.id = id
         self.name = name
-        self.value = value
+        self.token = token
+        self.toktype = toktype
         self.content = content
+    def getViews(self, toktypeDict):
+        data =[self.token]
+        if self.token in toktypeDict:
+            data.extend(toktypeDict[self.token])
+        else:
+            data.append('g_unknown')
+        return data
+    @staticmethod
+    def fromContent(vinfor):
+        idx2 = len(vinfor)
+        if '_' in vinfor:
+            idx2 = vinfor.index('_')
+        idx1 = 0
+        toktype='API'
+        if vinfor.startswith('a0x'):
+            toktype='ASM'
+            idx1 = 11
+            if re.match('a0x(\d|[a-e]|f){12,}', vinfor, flags=0):
+                idx1 = 19
+
+        token = vinfor[idx1:idx2]
+        vertex = GVertex(id=-1, name=vinfor, token=token, toktype=toktype, content='')
+        return vertex
     def show(self, buf = sys.stdout):
-        buf.write(str(self.id) +'-'+ self.value+' ('+self.name+'-'+ self.content+')')
+        buf.write(str(self.id) +'-'+ self.token+' ('+self.name+'-'+ self.content+')')
+    def dump(self):
+        return {'id':self.id,'name':self.name, 'token':self.token,'toktype':self.toktype, 'content':self.content}
 class Graph:
     Vs =None
     Es =None
@@ -27,12 +50,14 @@ class Graph:
             self.Es =[]
         else:
             self.Es = es
-    def addNode(self, node=None):
-        self.Vs[node.id] = node
+    def addVetex(self, v=None):
+        self.Vs[v.id] = v
     def addEdge(self, node1, node2):
         self.Es.append((node1.id, node2.id))
+    def addEdgebyID(self, node1_id, node2_id):
+        self.Es.append((node1_id, node2_id))
     def show(self, buf = sys.stdout):
-        buf.write('Nodes\n')
+        buf.write('Vertexes\n')
         for id in self.Vs:
             self.Vs[id].show(buf= buf)
             buf.write('\n')
@@ -43,6 +68,25 @@ class Graph:
         return self.Vs
     def getEdges(self):
         return self.Es
+
+    def dump(self):
+        vertexes=[]
+        for v in self.Vs.values():
+            vertexes.append(v.dump())
+        edges =[]
+        for (v1,v2) in self.Es:
+            edges.append((v1, v2))
+        return {'V':vertexes,'E':edges}
+
+    @staticmethod
+    def load(dumped_obj):
+        g = Graph()
+        # get vertexes
+        for v in dumped_obj['V']:
+            g.addVetex(GVertex(id=v['id'], name=v['name'], token=v['token'], toktype=v['toktype'], content=v['content']))
+        for v1_id, v2_id in dumped_obj['E']:
+            g.addEdgebyID(v1_id, v2_id)
+        return g
     # @staticmethod
     # def loadGraph(file=''):
     #     nodename_dict ={}

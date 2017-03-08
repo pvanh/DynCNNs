@@ -16,7 +16,7 @@ class info:
         self.childrenList = []
 
 
-def ConstructTreeConvolution(graph,word_dict, numFea, numCon, numDis, numOut, \
+def ConstructGraphConvolution(graph,word_dict, numFea, numCon, numDis, numOut, \
                              Wconv_root, Wconv_neighbor, Bconv, \
                              Wdis, Woutput, Bdis, Boutput
                              ):
@@ -51,11 +51,11 @@ def ConstructTreeConvolution(graph,word_dict, numFea, numCon, numDis, numOut, \
     # construct layers for each node
     for idx in xrange(numVertexes):
         v = vertexes[idx]
-        if v.value in word_dict:
-            bidx = word_dict[v.value] * numFea
+        if v.token in word_dict:
+            bidx = word_dict[v.token] * numFea
         else:
             bidx =0
-        layers[idx] = Lay.layer('vec_' + str(idx) + '_' + v.value, \
+        layers[idx] = Lay.layer('vec_' + str(idx) + '_' + v.token, \
                                 range(bidx, bidx + numFea), \
                                 numFea
                                 )
@@ -71,7 +71,7 @@ def ConstructTreeConvolution(graph,word_dict, numFea, numCon, numDis, numOut, \
         for idx in xrange (numVertexes):
             # current vertex V[idx]
             v = vertexes[idx]
-            conLayer = Lay.layer('Convolve'+str(c)+'_' + v.value, Bconv[c], numCon[c])
+            conLayer = Lay.layer('Convolve'+str(c)+'_' + v.token, Bconv[c], numCon[c])
             conLayer.act = 'convolution'
             layers.append(conLayer)
             current_layer[idx] = conLayer
