@@ -146,6 +146,15 @@ def writeGraph2Json(datadir, out):
      #write to file
     with open(out, 'w') as outfile:
         json.dump(jsonObjs, outfile)
+def readGraphFromJson(jsonFile=''): # 1: non-virus, 2: virus
+    graphs=[]
+    with open(jsonFile, 'r') as f:
+        jsonObjs = json.load(f)
+        for obj in jsonObjs:
+            g = Graph.load(obj)
+            graphs.append(g)
+    return graphs
+
 def createTokenVecs(datafiles='', out='', vecsize=30):
     tokdict ={}
     for file in datafiles:

@@ -37,15 +37,14 @@ class Vinfo:
 
 
 def ConstructGraphConvolution(graph,word_dict,numView, numFea, numCon, numDis, numOut, \
-                             Wconv_root, Wconv_neighbor, Bconv, \
+                             Wconv_root, Wconv_in, Wconv_out, Bconv, \
                              Wdis, Woutput, Bdis, Boutput
                              ):
-    #word_dict: [dict_view1, dict_view2]
+    #word_dict:
     #numView, numFea, numCon, numDis, numOut, \
-    #Wconv_root    [View1:[conv1, conv2, ...], View2:[conv1, conv2, ...]]
-    #Wconv_income  [View1:[conv1, conv2, ...], View2:[conv1, conv2, ...]]
-    #Wconv_out     [View1:[conv1, conv2, ...], View2:[conv1, conv2, ...]]
-    #Bconv         [View1:[conv1, conv2, ...], View2:[conv1, conv2, ...]]
+    #Wconv_root    [[conv1_view1, conv1_view2, ...], conv2, ...]]
+    #Wconv_neighbor  [[conv1_view1, conv1_view2, ...], conv2, ...]]
+    #Bconv        [conv1, conv2, ...]
     #Wdis[pool_view1, pool_view2, ...---> Dis]
 
     vertexes = graph.getVertexes() # dict of nodes: id - node
@@ -65,28 +64,27 @@ def ConstructGraphConvolution(graph,word_dict,numView, numFea, numCon, numDis, n
             if idx == v2: # incoming edge
                 vinfor.income.append(v1)
         vertexes_info[idx] = vinfor
-    # sum of indegree, sum of out degree of neighbors
+    # sum degree of incoming nodes and outgoing nodes
     n_degrees ={}
     for idx in vertexes_info:
-        sumin =0
-        sumout =0
+        d_innode =0
+        d_outnode =0
         vinfor = vertexes_info[idx]
         for nid in vinfor.outgo:
             neighbor = vertexes_info[nid]
-            sumin += neighbor.inDegree()
-            sumout += neighbor.outDegree()
+            d_outnode += neighbor.inDegree() + neighbor.outDegree()
 
-        n_degrees[vinfor.id] =(sumin, sumout)
+        for nid in vinfor.income:
+            neighbor = vertexes_info[nid]
+            d_innode += neighbor.inDegree() + neighbor.outDegree()
+
+        n_degrees[vinfor.id] =(d_innode, d_outnode)
 
     layers=[]
-    pool = [None]*numView # pooling layers
 
+    emb_layers =[None] * numView
     for view in range(0, numView):
-        view_layers = [None] * numVertexes
-        # weights for the current view
-        view_wroot = Wconv_root[view]
-        view_wneighbor = Wconv_neighbor[view]
-        view_bconv = Bconv[view]
+        emb_layers[view] = [None] * numVertexes
         # construct the embedding layer for each vertex
         for idx in xrange(numVertexes):
             # get vertex
@@ -96,59 +94,77 @@ def ConstructGraphConvolution(graph,word_dict,numView, numFea, numCon, numDis, n
                 bidx = word_dict[token] * numFea
             else:
                 bidx =0
-            view_layers[idx] = Lay.layer('vec_' + str(idx) + '_' + token, \
+            emb_layers[view][idx] = Lay.layer('vec_' + str(idx) + '_' + token, \
                                     range(bidx, bidx + numFea), \
                                     numFea
                                     )
-            view_layers[idx].act = 'embedding'
+            emb_layers[view][idx].act = 'embedding'
 
-        pre_layer ={}
-        for idx in xrange(numVertexes):
-            pre_layer[idx] = view_layers[idx]
+            layers.append(emb_layers[view][idx])
 
-        num_Pre = numFea # the size of previous layers
-        for c in xrange(len(numCon)): # convolutional layers
-            current_layer ={} # current layer
-            for idx in xrange (numVertexes):
-                # current vertex V[idx]
-                vinfor = vertexes_info[idx]
-                token = vinfor.data[view]  # get the token
+    pre_layer ={}
+    num_Pre = numFea # the size of previous layers
+    for c in xrange(len(numCon)): # convolutional layers
+        current_layer ={} # current layer
+        for idx in xrange (numVertexes):
+            # current vertex V[idx]
+            vinfor = vertexes_info[idx]
+            token = vinfor.data[0]  # get the token
 
-                conLayer = Lay.layer('Convolve'+str(c)+'_' + token+'_V'+str(view+1), view_bconv[c], numCon[c])
-                conLayer.act = 'convolution'
-                view_layers.append(conLayer)
-                current_layer[idx] = conLayer
-                # add root connection
-                rootCon = Con.connection(pre_layer[idx], conLayer, num_Pre, numCon[c], view_wroot[c])
-                # add incoming connections
-                n_sumin, n_sumout = n_degrees[idx]
-                n_sumDegree = n_sumin + n_sumout
-                if n_sumDegree==0:
-                    n_sumDegree = 1
+            conLayer = Lay.layer('Convolve'+str(c)+'_' + token+'_V'+str(view+1), Bconv[c], numCon[c])
+            conLayer.act = 'convolution'
+            layers.append(conLayer)
+            current_layer[idx] = conLayer
 
+            # add connections
+            if c==0: # all views of embedding ---> convolution 1
+                for v in range(0, numView):
+                    rootCon = Con.connection(emb_layers[v][idx], conLayer, num_Pre, numCon[c], Wconv_root[c][v])
+                    # add connections
+                    dsum_innodes, dsum_outnodes = n_degrees[idx]
+
+                    for n in vinfor.outgo: # outgoing nodes
+                        # print token, vertexes_info[n].inDegree(), ',', vertexes_info[n].outDegree(), ',', n_sumDegree
+                        Wcoef = 1.0* (vertexes_info[n].inDegree()+vertexes_info[n].outDegree())/ dsum_outnodes
+                        if Wcoef !=0:
+                            neighborCon = Con.connection(emb_layers[v][n], conLayer, num_Pre, numCon[c], Wconv_out[c][v],Wcoef = Wcoef)
+                    for n in vinfor.income: # outgoing nodes
+                        # print token, vertexes_info[n].inDegree(), ',', vertexes_info[n].outDegree(), ',', n_sumDegree
+                        Wcoef = 1.0* (vertexes_info[n].inDegree()+vertexes_info[n].outDegree())/ dsum_innodes
+                        if Wcoef !=0:
+                            neighborCon = Con.connection(emb_layers[v][n], conLayer, num_Pre, numCon[c], Wconv_in[c][v],Wcoef = Wcoef)
+            else:
+                rootCon = Con.connection(pre_layer[idx], conLayer, num_Pre, numCon[c], Wconv_root[c])
+                # add connections
+                dsum_innodes, dsum_outnodes = n_degrees[idx]
                 for n in vinfor.outgo:
                     # print token, vertexes_info[n].inDegree(), ',', vertexes_info[n].outDegree(), ',', n_sumDegree
-                    Wcoef = 1.0* (vertexes_info[n].inDegree()+vertexes_info[n].outDegree())/ n_sumDegree
-                    if Wcoef !=0:
-                        neighborCon = Con.connection(pre_layer[n], conLayer, num_Pre, numCon[c], view_wneighbor[c],Wcoef = Wcoef)
+                    Wcoef = 1.0 * (vertexes_info[n].inDegree() + vertexes_info[n].outDegree()) / dsum_outnodes
+                    if Wcoef != 0:
+                        neighborCon = Con.connection(pre_layer[n], conLayer, num_Pre, numCon[c], Wconv_out[c], Wcoef=Wcoef)
 
-            num_Pre = numCon[c]
-            pre_layer = current_layer
+                for n in vinfor.income:
+                    # print token, vertexes_info[n].inDegree(), ',', vertexes_info[n].outDegree(), ',', n_sumDegree
+                    Wcoef = 1.0 * (vertexes_info[n].inDegree() + vertexes_info[n].outDegree()) / dsum_innodes
+                    if Wcoef != 0:
+                        neighborCon = Con.connection(pre_layer[n], conLayer, num_Pre, numCon[c], Wconv_in[c],
+                                                     Wcoef=Wcoef)
 
-        pool[view] = Lay.PoolLayer('pooling'+str(view+1), numCon[-1])
-        view_layers.append(pool[view])
-        # connect from convolution ---> pooling
-        for key in pre_layer:
-            poolCon = Con.PoolConnection(pre_layer[key], pool[view])
-        # add view layers to layers
-        layers.extend(view_layers)
+        num_Pre = numCon[c]
+        pre_layer = current_layer
+
+    pool = Lay.PoolLayer('pooling', numCon[-1])
+    # connect from convolution ---> pooling
+    for key in pre_layer:
+        poolCon = Con.PoolConnection(pre_layer[key], pool)
+    # add view layers to layers
+    layers.append(pool)
 
     # discriminative layer
     discriminative = Lay.layer('discriminative', Bdis, numDis)
     discriminative.act = 'hidden'
     # pool ---> discriminative
-    for idx in range(0, numView):
-        con = Con.connection(pool[idx], discriminative, numCon[-1], numDis, Wdis[idx])
+    con = Con.connection(pool, discriminative, numCon[-1], numDis, Wdis)
 
     output = Lay.layer('outputlayer', Boutput, numOut)
     output.act = 'softmax'

@@ -1,5 +1,5 @@
 
-import Data_IO
+import GraphData_IO
 
 import write_param
 import sys
@@ -14,7 +14,7 @@ import numpy as np
 
 sys.setrecursionlimit(1000000)
 
-word_dict, vectors, numFea = Data_IO.LoadVocab(vocabfile=datapath + 'tokvec.txt')
+word_dict, vectors, numFea = GraphData_IO.LoadVocab(vocabfile=datapath + 'tokvec.txt')
 print 'Vocab length =', len(word_dict)
 print 'Embedding size =', numFea
 

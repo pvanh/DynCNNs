@@ -1,12 +1,12 @@
-import Data_IO
+import GraphData_IO
 import main_MultiChannelGCNN as GCNN
 # import main_GCNN as GCNN
 import gcnn_params as params
 datapath = params.datapath
-word_dict, vectors, numFea = Data_IO.LoadVocab(vocabfile=datapath + 'tokvec.txt')
+word_dict, vectors, numFea = GraphData_IO.LoadVocab(vocabfile=datapath + 'tokvec.txt')
 
 def testNet(filename):
-    graph = Data_IO.getGraph(filename=filename)
+    graph = GraphData_IO.getGraph(filename=filename)
 
     layers = GCNN.InitByNodes(graph = graph , word_dict = word_dict)
     print 'Totally:', len(layers), 'layer(s)'
@@ -27,5 +27,10 @@ def testNet(filename):
                     '(xnum= ', c.xnum, ', ynum= ', c.ynum, ')'
 
 if __name__ == "__main__":
+    # print GCNN.Wconv_root[0][1]
+    # print GCNN.Wconv_neighbor
+    # print GCNN.Bconv
     filename ='C:/Users/anhpv/Desktop/CFG/test.dot'
     testNet(filename=filename)
+    # arr =[[[1,2,3,4],[2,3,2]],[2,3],[5,6]]
+    # print arr[0][0]

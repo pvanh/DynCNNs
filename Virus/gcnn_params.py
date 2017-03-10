@@ -1,10 +1,10 @@
 import random
 
-import Data_IO
+import GraphData_IO
 
-datapath ='C:/Users/anhpv/Desktop/CFG/'
+datapath ='C:/Users/anhpv/Desktop/CFG/GraphJson/'
 # load token types dictionary
-toktypeDict = Data_IO.LoadTokenTypeDict(filename=datapath+'toktypeDict.txt')
+toktypeDict = GraphData_IO.LoadTokenTypeDict(filename=datapath + 'toktypeDict.txt')
 numDis = 5
 numOut = 2
 
@@ -23,3 +23,9 @@ datafiles['test_nonvirus'] = datapath+'Testing/NonVirus.json'
 #     vec = [random.uniform(-1, 1) for v in xrange(30)]
 #     vec = [str(i) for i in vec]
 #     print  g +' '+' '.join(vec)
+# numTok = 1424
+# print '@relation dataset\n'
+# for i in range(numTok):
+#     print '@attribute F'+str(i+1)+' numeric'
+# print '@attribute F'+str(numTok+1)+'{True, False}'
+# print '\n@data\n'

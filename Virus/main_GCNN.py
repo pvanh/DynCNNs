@@ -3,7 +3,7 @@ import random
 import struct
 
 import constructNetWork_GCNN as TC
-import Data_IO
+import GraphData_IO
 import cPickle as p
 
 import Graph
@@ -21,7 +21,7 @@ import numpy as np
 
 sys.setrecursionlimit(1000000)
 
-word_dict, vectors, numFea = Data_IO.LoadVocab(vocabfile=datapath + 'tokvec.txt')
+word_dict, vectors, numFea = GraphData_IO.LoadVocab(vocabfile=datapath + 'tokvec.txt')
 print 'Vocab length =', len(word_dict)
 print 'Embedding size =', numFea
 
@@ -114,14 +114,14 @@ if __name__ == "__main__":
     test_net =[]
     # training
     net = constructNetFromJson(jsonFile=datafiles['train_nonvirus'],labelclass=1)
-    train_net.append(net)
+    train_net.extend(net)
     net = constructNetFromJson(jsonFile=datafiles['train_virus'], labelclass=2)
-    train_net.append(net)
+    train_net.extend(net)
     #testing
     net = constructNetFromJson(jsonFile=datafiles['test_nonvirus'], labelclass=1)
-    test_net.append(net)
+    test_net.extend(net)
     net = constructNetFromJson(jsonFile=datafiles['test_virus'], labelclass=2)
-    test_net.append(net)
+    test_net.extend(net)
     # # write network
     # np.random.seed(314159)
     # np.random.shuffle(networks)
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     for i in xrange(0, len(train_net)):
         (net, ti) = train_net[i]
         #write net
-        Data_IO.WriteNet(f, net)
+        GraphData_IO.WriteNet(f, net)
         # print ti
         f_y.write(str(ti) + '\n')
     f.close()
@@ -148,7 +148,7 @@ if __name__ == "__main__":
     for i in xrange(0, len(test_net)):
         (net, ti) = test_net[i]
         #write net
-        Data_IO.WriteNet(f, net)
+        GraphData_IO.WriteNet(f, net)
         #write ti
         f_y.write(str(ti) + '\n')
     f.close()

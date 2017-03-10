@@ -3,7 +3,7 @@ import random
 import struct
 
 import constructNetWork_MultiChannelGCNN as TC
-import Data_IO
+import GraphData_IO
 import cPickle as p
 
 from Graph import Graph
@@ -21,7 +21,7 @@ import numpy as np
 
 sys.setrecursionlimit(1000000)
 
-word_dict, vectors, numFea = Data_IO.LoadVocab(vocabfile=datapath + 'tokvec.txt')
+word_dict, vectors, numFea = GraphData_IO.LoadVocab(vocabfile=datapath + 'tokvec.txt')
 print 'Vocab length =', len(word_dict)
 print 'Embedding size =', numFea
 
@@ -51,36 +51,48 @@ Biases, BwordIdx = InitParam(Biases, newWeights=preBword)
 # Wdis[pool_view1, pool_view2, ...---> Dis]
 
 Wconv_root=[]
-Wconv_neighbor =[]
+Wconv_in =[]
+Wconv_out =[]
 Bconv =[]
 # convolution layers
-for v in range(0, numView):
-    view_wroot =[]
-    view_wneighbor =[]
-    view_bconv =[]
-    num_Pre = numFea
-    for c in range(len(numCon)):
+num_Pre = numFea
+for c in range(len(numCon)):
+    if c==0:
+        view_wroot =[None]*numView
+        view_win = [None]*numView
+        view_wout = [None] * numView
+
+        for v in range(0, numView):
+            Weights, w = InitParam(Weights, num=num_Pre * numCon[c])
+            view_wroot[v]= w
+
+            Weights, w = InitParam(Weights, num=num_Pre * numCon[c])
+            view_win[v] = w
+
+            Weights, w = InitParam(Weights, num=num_Pre * numCon[c])
+            view_wout[v] = w
+
+        Wconv_root.append(view_wroot)
+        Wconv_in.append(view_win)
+        Wconv_out.append(view_wout)
+    else:
         Weights, w = InitParam(Weights, num=num_Pre * numCon[c])
-        view_wroot.append(w)
+        Wconv_root.append(w)
 
         Weights, w = InitParam(Weights, num=num_Pre * numCon[c])
-        view_wneighbor.append(w)
+        Wconv_in.append(w)
 
-        Biases, b = InitParam(Biases, num=numCon[c])
-        view_bconv.append(b)
+        Weights, w = InitParam(Weights, num=num_Pre * numCon[c])
+        Wconv_out.append(w)
 
-        num_Pre = numCon[c]
+    Biases, b = InitParam(Biases, num=numCon[c])
+    Bconv.append(b)
 
-    Wconv_root.append(view_wroot)
-    Wconv_neighbor.append(view_wneighbor)
-    Bconv.append(view_bconv)
-
+    num_Pre = numCon[c]
 
 # discriminative layer
-Wdis =[]
-for v in range(0, numView):
-    Weights, w = InitParam(Weights, num=num_Pre * numDis)
-    Wdis.append(w)
+Weights, Wdis = InitParam(Weights, num=num_Pre * numDis)
+
 Biases, Bdis = InitParam(Biases, num=numDis)
 
 # output layer
@@ -102,9 +114,9 @@ gradBiases = np.zeros_like(Biases)
 
 def InitByNodes(graph, word_dict):
     # Embedding ---> Conv1 ---> .... ---> Convn ---> Pooling ---> Fully-Connected ---> Output
-    #(graph, word_dict, numView, numFea, numCon, numDis, numOut, \
-                                 # Wconv_root, Wconv_in, Wconv_out, Bconv, \
-                                 # Wdis, Woutput, Bdis, Boutput
+    #(graph,word_dict,numView, numFea, numCon, numDis, numOut, \
+                             # Wconv_root, Wconv_in, Wconv_out, Bconv, \
+                             # Wdis, Woutput, Bdis, Boutput
                                  # ):
 
     # word_dict: [dict_view1, dict_view2]
@@ -115,7 +127,7 @@ def InitByNodes(graph, word_dict):
     # Bconv         [View1:[conv1, conv2, ...], View2:[conv1, conv2, ...]]
     # Wdis[pool_view1, pool_view2, ...---> Dis]
     layers = TC.ConstructGraphConvolution(graph, word_dict, numView, numFea, numCon, numDis, numOut, \
-                                 Wconv_root, Wconv_neighbor, Bconv, \
+                                 Wconv_root, Wconv_in, Wconv_out, Bconv, \
                                  Wdis, Woutput, Bdis, Boutput
                                  )
 
@@ -141,14 +153,14 @@ if __name__ == "__main__":
     test_net =[]
     # training
     net = constructNetFromJson(jsonFile=datafiles['train_nonvirus'],labelclass=1)
-    train_net.append(net)
+    train_net.extend(net)
     net = constructNetFromJson(jsonFile=datafiles['train_virus'], labelclass=2)
-    train_net.append(net)
+    train_net.extend(net)
     #testing
     net = constructNetFromJson(jsonFile=datafiles['test_nonvirus'], labelclass=1)
-    test_net.append(net)
+    test_net.extend(net)
     net = constructNetFromJson(jsonFile=datafiles['test_virus'], labelclass=2)
-    test_net.append(net)
+    test_net.extend(net)
     # # write network
     # np.random.seed(314159)
     # np.random.shuffle(networks)
@@ -164,7 +176,7 @@ if __name__ == "__main__":
     for i in xrange(0, len(train_net)):
         (net, ti) = train_net[i]
         #write net
-        Data_IO.WriteNet(f, net)
+        GraphData_IO.WriteNet(f, net)
         # print ti
         f_y.write(str(ti) + '\n')
     f.close()
@@ -175,7 +187,7 @@ if __name__ == "__main__":
     for i in xrange(0, len(test_net)):
         (net, ti) = test_net[i]
         #write net
-        Data_IO.WriteNet(f, net)
+        GraphData_IO.WriteNet(f, net)
         #write ti
         f_y.write(str(ti) + '\n')
     f.close()
