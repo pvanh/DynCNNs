@@ -295,6 +295,7 @@ def WriteNet(f =None, layers=None):
 if __name__ == "__main__":
 
     path ='C:/Users/anhpv/Desktop/CFG/Experiment/'
+    path ='C:/Users/anhpv/Desktop/CFG/'
     fold ='Training/'
     name= 'Virus'
     datapath = path+fold
@@ -324,10 +325,9 @@ if __name__ == "__main__":
     #     #json.dumps([o.dump() for o in my_list_of_ipport])
     #     json.dump([json_object], outfile)
     # # print json_object
-    # with open(path + 'test.json', 'r') as outfile:
-    #     json_object = json.load(outfile)
-    #     g= Graph.load(json_object[0])
-    #     g.show()
-    path = 'C:/Users/anhpv/Desktop/CFG/'
-    g = getGraph(path + 'check1.dot')
-    g.show()
+    with open(path + 'test.json', 'r') as outfile:
+        json_object = json.load(outfile)
+        g= Graph.load(json_object[0])
+        g.show()
+    # path = 'C:/Users/anhpv/Desktop/CFG/'
+    # g = getGraph(path + 'check1.dot')

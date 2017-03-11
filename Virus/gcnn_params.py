@@ -3,13 +3,14 @@ import random
 import GraphData_IO
 
 datapath ='C:/Users/anhpv/Desktop/CFG/GraphJson/'
+datapath ='D:/JsonAST_Graph/'
 # load token types dictionary
 toktypeDict = GraphData_IO.LoadTokenTypeDict(filename=datapath + 'toktypeDict.txt')
-numDis = 5
-numOut = 2
+numDis = 300
+numOut = 104
 
 numView =2
-numCon =[2,3,4]
+numCon =[200,300,600]
 
 datafiles ={}
 datafiles['train_virus'] = datapath+'Training/Virus.json'

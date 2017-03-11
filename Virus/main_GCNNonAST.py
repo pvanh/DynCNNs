@@ -1,6 +1,13 @@
-import GraphData_IO
+import json
+import random
+import struct
 
-import write_param
+import constructNetWork_MultiChannelGCNN as TC
+import GraphData_IO
+import cPickle as p
+
+from Graph import Graph
+from nn import serialize
 
 import sys, os
 import gcnn_params as params
@@ -99,14 +106,67 @@ print 'num of biases = ', len(Biases)
 print 'num of weights = ', len(Weights)
 
 # initial the gradients
-print 'numCon', numCon
-print 'numDis', numDis
-print 'numOut', numOut
-print 'Weights', len(Weights)
-print 'Bias', len(Biases)
-# dwadwad
-# 17940
-# 1544
-#
-write_param.write_binary('../paramTest_GCNN_V'+str(numView), Weights, Biases)
-print 'Done!'
+
+gradWeights = np.zeros_like(Weights)
+gradBiases = np.zeros_like(Biases)
+
+
+
+def InitByNodes(graph, word_dict):
+    # Embedding ---> Conv1 ---> .... ---> Convn ---> Pooling ---> Fully-Connected ---> Output
+    #(graph,word_dict,numView, numFea, numCon, numDis, numOut, \
+                             # Wconv_root, Wconv_in, Wconv_out, Bconv, \
+                             # Wdis, Woutput, Bdis, Boutput
+                                 # ):
+
+    # word_dict: [dict_view1, dict_view2]
+    # numView, numFea, numCon, numDis, numOut, \
+    # Wconv_root    [View1:[conv1, conv2, ...], View2:[conv1, conv2, ...]]
+    # Wconv_income  [View1:[conv1, conv2, ...], View2:[conv1, conv2, ...]]
+    # Wconv_out     [View1:[conv1, conv2, ...], View2:[conv1, conv2, ...]]
+    # Bconv         [View1:[conv1, conv2, ...], View2:[conv1, conv2, ...]]
+    # Wdis[pool_view1, pool_view2, ...---> Dis]
+    layers = TC.ConstructGraphConvolution(graph, word_dict, numView, numFea, numCon, numDis, numOut, \
+                                 Wconv_root, Wconv_in, Wconv_out, Bconv, \
+                                 Wdis, Woutput, Bdis, Boutput
+                                 )
+
+
+    return layers
+
+
+def constructNetFromJson(jsonFile='', xfile ='', yfile=''):
+    networks=[]
+    with open(jsonFile, 'r') as f:
+        jsonObjs = json.load(f)
+        for obj in jsonObjs:
+            graph = Graph.load(obj)
+            g_net = InitByNodes(graph=graph, word_dict=word_dict)
+            networks.append((g_net, graph.label))
+    # write to file
+    f = file(xfile, 'wb')
+    f_y = file(yfile, 'w')
+    print jsonFile,', Net len =', len(networks)
+    for i in xrange(0, len(networks)):
+        (net, ti) = networks[i]
+        # write net
+        GraphData_IO.WriteNet(f, net)
+        # print ti
+        f_y.write(str(ti) + '\n')
+    f.close()
+    f_y.close()
+
+if __name__ == "__main__":
+
+    datafiles ={}
+    xypath =datapath+'/xy/'
+    datafiles['train'] = [datapath+'data_train.json', xypath+'train_Xnet', xypath+'train_Y.txt']
+    datafiles['CV'] = [datapath+'data_CV.json', xypath+'CV_Xnet', xypath+'CV_Y.txt']
+    datafiles['test'] = [datapath+'data_test.json', xypath+'test_Xnet', xypath+'test_Y.txt']
+
+    for fold in datafiles:
+        jsonfile, xfile, yfile = datafiles[fold]
+        constructNetFromJson(jsonFile=jsonfile,xfile=xfile, yfile=yfile)
+
+
+    print 'Done!!'

@@ -40,8 +40,7 @@ class GVertex:
 class Graph:
     Vs =None
     Es =None
-
-    def __init__(self, vs=None, es=None):
+    def __init__(self, vs=None, es=None, label = -1):
         if vs is None:
             self.Vs ={}
         else:
@@ -50,6 +49,7 @@ class Graph:
             self.Es =[]
         else:
             self.Es = es
+        self.label = label
     def addVetex(self, v=None):
         self.Vs[v.id] = v
     def addEdge(self, node1, node2):
@@ -76,7 +76,7 @@ class Graph:
         edges =[]
         for (v1,v2) in self.Es:
             edges.append((v1, v2))
-        return {'V':vertexes,'E':edges}
+        return {'V':vertexes,'E':edges,'label':self.label}
 
     @staticmethod
     def load(dumped_obj):
@@ -86,6 +86,7 @@ class Graph:
             g.addVetex(GVertex(id=v['id'], name=v['name'], token=v['token'], toktype=v['toktype'], content=v['content']))
         for v1_id, v2_id in dumped_obj['E']:
             g.addEdgebyID(v1_id, v2_id)
+        g.label = dumped_obj['label']
         return g
     # @staticmethod
     # def loadGraph(file=''):
