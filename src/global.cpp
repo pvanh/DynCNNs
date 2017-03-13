@@ -50,7 +50,7 @@ void ReadParam(char* filepath){
 	cout<< "\nLoad parameters from "<< filepath<<flush;
 
 	if( infile == NULL){
-		cout << "ERR: Can't load parameters; file name : " << filepath << endl;
+		cout << "ERR: Can't load parameters; file name : '" << filepath << "'" <<endl;
 		exit(1);
 	}
 

@@ -28,6 +28,10 @@ extern char * f_test;
 extern char * f_yCV;
 extern char * f_ytest;
 extern char * f_ytrain;
+extern char * buf_train;
+extern char * buf_CV;
+extern char * buf_test;
+
 Layer ** global;
 int main(int argc, char* argv[]){
 	// read parameters from setting file
@@ -121,7 +125,10 @@ int main(int argc, char* argv[]){
 	
 	ReadAllData();
 	cout << "INFO: Data loaded" << endl;
-
+	// check x train, cv, test
+//	getNetInfor(buf_train, num_train, "trainnet_info.txt");
+//	getNetInfor(buf_CV, num_CV, "cvnet_info.txt");
+//	getNetInfor(buf_test, num_test, "testnet_info.txt");
 
 
 	isTraining = true;

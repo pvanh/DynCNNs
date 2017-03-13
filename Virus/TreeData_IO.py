@@ -169,17 +169,31 @@ def createTokGroupVec():
         print g, ' '.join(vec)
 def testAST_GraphNet():
     text ='''
-    int b = a + 3;
+ int main()
+ {
+    int x = y + 3;
+ }
     '''
     parser = pycparser.c_parser.CParser()
     ast = parser.parse(text=text)  # Parse code to AST
+    ast.show()
     if gl.reConstruct:  # reconstruct braches of For, While, DoWhile
         ast.reConstruct()
     g =tree2Graph(ast)
     import main_MultiChannelGCNN as GCNN
     word_dict, vectors, numFea = GraphData_IO.LoadVocab(vocabfile=gcnn_params.datapath + 'tokvec.txt')
     layers = GCNN.InitByNodes(graph=g, word_dict=word_dict)
+    print "num node =", len(g.Vs)
     print 'Totally:', len(layers), 'layer(s)'
+    num_con =0
+    for i, layer in enumerate(layers):
+        layer.idx = i
+        num_con += len(layer.connectUp)
+        for (icon, con) in enumerate(layer.connectDown):
+            con.ydownid = icon
+
+    print 'connection num:',num_con
+
     for l in layers:
         if hasattr(l, 'bidx') and l.bidx is not None:
             print l.name, '\tBidx', l.bidx[0], '\tlen biases=', len(l.bidx)

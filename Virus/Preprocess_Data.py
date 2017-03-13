@@ -189,6 +189,18 @@ def copyData(sourceDir, desDir, filetype='.c'):
             if not onefile.endswith(filetype):
                 continue
             copyfile(subdir_fullpath+onefile, desDir+ subdir_name+'_' + onefile )
+def deleteEmptyFiles():
+    path ='C:/Users/anhpv/Desktop/CFG/Experiment/'
+    emptyInfo = path +'EmptyGraphs.txt'
+    f = open(emptyInfo,'r')
+    for line in f.readlines():
+        line = line.strip()
+        if line =='':
+            continue
+        onefile = path+line
+        if os.path.isfile(onefile):
+            os.remove(onefile)
+    f.closed
 if __name__ == "__main__":
     # sourceDir='D:/data/data_Ctype/'
     # desDir ='D:/data/data_exe/'
@@ -211,7 +223,9 @@ if __name__ == "__main__":
 
     #split data
 
-    source1 ='C:/Users/anhpv/Desktop/CFG/Experiment/OriginalData/NonVirus/'
-    source2 = 'C:/Users/anhpv/Desktop/CFG/Experiment/OriginalData/Virus/'
-    destPath ='C:/Users/anhpv/Desktop/CFG/Experiment/5Folds/'
-    SplitnFolds(nonvirusPath=source1, virusPath=source2,destPath=destPath)
+    # source1 ='C:/Users/anhpv/Desktop/CFG/Experiment/OriginalData/NonVirus/'
+    # source2 = 'C:/Users/anhpv/Desktop/CFG/Experiment/OriginalData/Virus/'
+    # destPath ='C:/Users/anhpv/Desktop/CFG/Experiment/5Folds/'
+    # SplitnFolds(nonvirusPath=source1, virusPath=source2,destPath=destPath)
+
+    deleteEmptyFiles()

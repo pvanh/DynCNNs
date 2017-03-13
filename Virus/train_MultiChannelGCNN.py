@@ -108,5 +108,5 @@ print 'Bias', len(Biases)
 # 17940
 # 1544
 #
-write_param.write_binary('../paramTest_GCNN_V'+str(numView), Weights, Biases)
+write_param.write_binary('../paramTest_ASTGraph_V'+str(numView), Weights, Biases)
 print 'Done!'

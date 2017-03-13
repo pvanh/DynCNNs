@@ -136,24 +136,29 @@ def InitByNodes(graph, word_dict):
 
 
 def constructNetFromJson(jsonFile='', xfile ='', yfile=''):
-    networks=[]
+    # open files to write
+    f_x = file(xfile, 'wb')
+    f_y = file(yfile, 'w')
+    count =0
+    #numinst = random.randint(20,30)
     with open(jsonFile, 'r') as f:
         jsonObjs = json.load(f)
         for obj in jsonObjs:
+            count +=1
+            # if count< 26086:
+            #     continue
             graph = Graph.load(obj)
             g_net = InitByNodes(graph=graph, word_dict=word_dict)
-            networks.append((g_net, graph.label))
-    # write to file
-    f = file(xfile, 'wb')
-    f_y = file(yfile, 'w')
-    print jsonFile,', Net len =', len(networks)
-    for i in xrange(0, len(networks)):
-        (net, ti) = networks[i]
-        # write net
-        GraphData_IO.WriteNet(f, net)
-        # print ti
-        f_y.write(str(ti) + '\n')
-    f.close()
+            # write net
+            GraphData_IO.WriteNet(f_x, g_net)
+            # print y
+            f_y.write(str(graph.label) + '\n')
+            if count %10:
+                f_x.flush()
+                f_y.flush()
+
+    # close files
+    f_x.close()
     f_y.close()
 
 if __name__ == "__main__":
@@ -164,6 +169,8 @@ if __name__ == "__main__":
     datafiles['CV'] = [datapath+'data_CV.json', xypath+'CV_Xnet', xypath+'CV_Y.txt']
     datafiles['test'] = [datapath+'data_test.json', xypath+'test_Xnet', xypath+'test_Y.txt']
 
+    # jsonfile, xfile, yfile = datafiles['train']
+    # constructNetFromJson(jsonFile=jsonfile, xfile=xfile, yfile=yfile)
     for fold in datafiles:
         jsonfile, xfile, yfile = datafiles[fold]
         constructNetFromJson(jsonFile=jsonfile,xfile=xfile, yfile=yfile)

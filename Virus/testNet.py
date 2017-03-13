@@ -9,6 +9,7 @@ def testNet(filename):
     graph = GraphData_IO.getGraph(filename=filename)
 
     layers = GCNN.InitByNodes(graph = graph , word_dict = word_dict)
+
     print 'Totally:', len(layers), 'layer(s)'
     for l in layers:
         if hasattr(l, 'bidx') and l.bidx is not None:
