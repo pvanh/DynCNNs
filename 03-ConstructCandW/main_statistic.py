@@ -65,7 +65,27 @@ def GetMajorFunction(root):
         if (major.NodeNum() < cnode.NodeNum()):
             major = cnode
     return major;
+def AST_Statistics(asts=[], outname=''):
 
+        out = open(outname,'w')
+        for ast in asts:
+            nodes = []
+            leafs = []
+            # print 'constructing the network'
+            ConstructNodes(ast, 'root', None, None, nodes, leafs)
+            nodes.extend(leafs)
+            AdjustOrder(nodes)
+
+            for nidx in xrange(len(nodes)):
+                if nodes[nidx].parent != None:
+                    nodes[nodes[nidx].parent].children.append(nidx)
+
+            leafNum, childrenNum, childAvgDepth = computeLeafNum(nodes[-1], nodes)
+            out.write(str(leafNum)+',')
+            out.write(str(childrenNum)+',')
+            out.write(str(childAvgDepth)+'\n')
+
+        out.close()
 def GenerateAST_Data(filename = '', out = None, justMajorFunc = False, reConstruct = False, ignoreDecl = False):
 
     parser = pycparser.c_parser.CParser()
@@ -103,31 +123,31 @@ def GenerateAST_Data(filename = '', out = None, justMajorFunc = False, reConstru
         out.write(str(childAvgDepth)+'\n')
 
 
-datadir = 'D:/data/original_data/'
-procount = 0;
-parser = pycparser.c_parser.CParser()
-
-filename = 'D:/statistic_mf.txt'
-out = open(filename, 'w')
-
-for subdir in os.listdir(datadir):
-    if not subdir.endswith('/'):
-        subdir = subdir + '/'
-
-    count = 0
-    procount += 1
-    print '!!!!!!!!!!!!!!!!!!  procount = ', procount
-    # if procount >3:
-    #    break
-    for onefile in os.listdir(datadir + subdir):
-
-        # print 'oneoneoneoneone!!!!!!!!!! '
-        filename = onefile
-        onefile = datadir + subdir + onefile
-
-        GenerateAST_Data(onefile, out=out, justMajorFunc=True, reConstruct=False, ignoreDecl=False)
-
-out.close()
-print 'Done!!!!!!'
-print 'procount = ', procount
+# datadir = 'D:/data/original_data/'
+# procount = 0;
+# parser = pycparser.c_parser.CParser()
+#
+# filename = 'D:/statistic_mf.txt'
+# out = open(filename, 'w')
+#
+# for subdir in os.listdir(datadir):
+#     if not subdir.endswith('/'):
+#         subdir = subdir + '/'
+#
+#     count = 0
+#     procount += 1
+#     print '!!!!!!!!!!!!!!!!!!  procount = ', procount
+#     # if procount >3:
+#     #    break
+#     for onefile in os.listdir(datadir + subdir):
+#
+#         # print 'oneoneoneoneone!!!!!!!!!! '
+#         filename = onefile
+#         onefile = datadir + subdir + onefile
+#
+#         GenerateAST_Data(onefile, out=out, justMajorFunc=True, reConstruct=False, ignoreDecl=False)
+#
+# out.close()
+# print 'Done!!!!!!'
+# print 'procount = ', procount
 

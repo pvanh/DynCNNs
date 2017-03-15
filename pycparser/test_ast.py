@@ -7,6 +7,7 @@
 # License: BSD
 # -----------------------------------------------------------------
 from __future__ import print_function
+from pycparser import parse_file
 import sys
 from pycparser import c_ast
 
@@ -67,6 +68,9 @@ from pycparser import c_parser
 # }
 # """
 import func_defs
+from pycparser._ast_gen import ASTCodeGenerator
+
+
 def GetMajorFunction(root):
     v = func_defs.FuncDefVisitor()
     v.visit(root)
@@ -80,19 +84,18 @@ def GetMajorFunction(root):
 
 
 text = """
-int main()
-{
-    printf("The sum of x+y =%d", x+y);
+int main() {
+  return 0;
 }
 """
 # print(sys.path)
-parser = c_parser.CParser()
-ast = parser.parse(text)
+# parser = c_parser.CParser()
+# ast = parser.parse(text)
 # visitor = c_ast.NodeVisitor()
 # visitor.visit(ast)
 #ast = GetMajorFunction(ast)
 #ast.reConstruct()
-ast.show()
+# ast.show()
 #count = ast.NodeNum()
 #print("\n\nNode count =", count )
 #ast.savepathsroot2leaf(rootpath='', f=sys.stdout, branchsepa = '\n')
@@ -113,3 +116,9 @@ ast.show()
 
 # print("After:")
 # ast.show(offset=2)
+
+filename ='C:/Users/anhpv/Google Drive/Nguyen Lab Works/Parsers/pycparser-2.14/examples/c_files/test_usingcpp.c'
+ast = parse_file(filename, use_cpp=True,
+                 cpp_path='gcc',
+                 cpp_args=['-E', r'-Iutils/fake_libc_include'])
+ast.show()

@@ -22,7 +22,7 @@ class Node:
                 buf,
                 offset=offset + 2)
 
-def LoadTree(filename=None):
+def LoadTree(filename=None): # stanford parse tree format
     #filename = 'D:/graphs.txt'
     reader = open(filename, 'r')
 
@@ -40,7 +40,9 @@ def LoadTree(filename=None):
         parent.children.append(child)
 
     return nodes['root']
-
+def loadNewickTree():
+    
+    return ''
 def LoadTokenMap(tokfile=None):
     reader = open(tokfile, 'r')
     tokenMap ={}

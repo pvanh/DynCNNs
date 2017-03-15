@@ -218,6 +218,33 @@ class Node(object):
                 dump = dump,
                 _my_node_name=child_name, f = f, delimitor = delimitor)
             f.write(d2)
+
+    def toNewickFormat(self, value=[], delimitor='('):
+        if delimitor == '(':
+            d1 = '('
+            d2 = ')'
+        else:
+            d1 = '{'
+            d2 = '}'
+        # buf.write('(')
+        # lead = '' * offset
+        children = self.children()
+        numChild = len(children)
+        if numChild>0:
+            value.append(d1)
+        for idx in range(0, numChild):
+            child_name, child = children[idx]
+            child.toNewickFormat(value=value, delimitor=delimitor)
+            if idx < numChild -1:
+                value.append(',')
+        # for (child_name, child) in self.children():
+        #     value.append(d1)
+        #     child.toNewickFormat(value=value, delimitor=delimitor)
+        #     value.append(d2)
+        if numChild>0:
+            value.append(d2)
+        value.append(self.__class__.__name__)
+
     def edges_tofile(self, parent ='', f = None):
 
         my_node_name = self.__class__.__name__
