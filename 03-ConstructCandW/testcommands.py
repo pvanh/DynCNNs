@@ -12,8 +12,19 @@ import numpy as np
 # import parser
 # text =""
 # ast = parser.parse(text=text)
-numFea = 4
-w1 = (np.eye(numFea) / 2)
-print w1
-w1 = w1.reshape(-1)
-print w1
+# numFea = 4
+# w1 = (np.eye(numFea) / 2)
+# print w1
+# w1 = w1.reshape(-1)
+# print w1
+numVertexes = 3
+numView = 4
+count =1
+emb_layers = numView * [None]
+for v in range(0, numView):
+    emb_layers[v] = numVertexes*[None]
+    for vertex in range(0, numVertexes):
+        emb_layers[v][vertex] = count
+        count +=1
+
+print emb_layers

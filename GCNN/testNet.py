@@ -6,7 +6,7 @@ datapath = params.datapath
 word_dict, vectors, numFea = GraphData_IO.LoadVocab(vocabfile=datapath + 'tokvec.txt')
 
 def testNet(filename):
-    graph = GraphData_IO.getGraph(filename=filename)
+    graph = GraphData_IO.getGraphFromTextFile(filename=filename)
 
     layers = GCNN.InitByNodes(graph = graph , word_dict = word_dict)
 

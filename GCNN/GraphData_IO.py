@@ -8,6 +8,7 @@ import os
 
 import re
 
+import commonFunctions
 from Graph import Graph, GVertex
 
 def LoadTokenTypeDict(filename =''):
@@ -45,7 +46,7 @@ def LoadVocab(vocabfile =''):
     # convert to float
     vectors = [float(i) for i in vectors]
     return dict, vectors, vecsize
-def getGraph(filename =''):
+def getGraphFromTextFile(filename =''):
     reader = open(filename,'r')
 
     #ignore 3 first rows
@@ -119,7 +120,7 @@ def dataStatistic(datadir=''):
             onefile = datadir + subdir + onefile
 
             if filename.endswith(".dot"):
-                g = getGraph(onefile)
+                g = getGraphFromTextFile(onefile)
                 vertexes = g.getVertexes().values()
                 for v in vertexes:
                     tokens[v.token] = v.token
@@ -140,7 +141,7 @@ def writeGraph2Json(datadir, out):
     jsonObjs =[]
     for onefile in os.listdir(datadir):
         if onefile.endswith(".dot"):
-            g = getGraph(datadir + onefile)
+            g = getGraphFromTextFile(datadir + onefile)
             jsonObjs.append(g.dump())
 
      #write to file
@@ -189,167 +190,25 @@ def searchContentInFile(datadir='', searchValue=''):
                     print datadir+onefile
                     #print content
                     #break
-def WriteNet(f =None, layers=None):
-    num_lay = struct.pack('i', len(layers))
-    if num_lay <= 2:
-        print 'error'
-    f.write(num_lay)
+def getGraphsFromDataDir(datadir, classlabel =0):
+    jsonObjs =[]
+    count = 1
+    for onefile in os.listdir(datadir):
+        if onefile.endswith(".dot"):
+            g = getGraphFromTextFile(datadir + onefile)
+            if classlabel>=0:
+                g.label = classlabel
+            jsonObjs.append(g.dump())
 
-    num_con = 0
-
-    #################################
-    # preprocessing, compute some indexes
-    for i, layer in enumerate(layers):
-        layer.idx = i
-        num_con += len(layer.connectUp)
-        for (icon, con) in enumerate(layer.connectDown):
-            con.ydownid = icon
-
-    num_con = struct.pack('i', num_con)
-    f.write(num_con)
-
-    #################################
-    # layers
-
-    for layer in layers:
-        # name
-        # = struct.pack('s', layer.name )
-        # numUnit
-        tmp = struct.pack('i', layer.numUnit)
-        f.write(tmp)
-        # numUp
-        tmp = struct.pack('i', len(layer.connectUp))
-        f.write(tmp)
-        # numDown
-        tmp = struct.pack('i', len(layer.connectDown))
-        f.write(tmp)
-
-        if layer.layer_type == 'p':  # pooling
-            if layer.poolType == 'max':
-                tlayer = 'x'
-            elif layer.poolType == 'sum':
-                tlayer = 'u'
-            tmp = struct.pack('c', tlayer)
-            f.write(tmp)
-
-        elif layer.layer_type == 'o':  # ordinary nodes
-
-            if layer.act == 'embedding':
-                tlayer = 'e'
-            elif layer.act == 'autoencoding':
-                tlayer = 'a'
-            elif layer.act == 'convolution':
-                tlayer = 'c'
-            elif layer.act == 'combination':
-                tlayer = 'b'
-            elif layer.act == "ReLU":
-                tlayer = 'r'
-            elif layer.act == 'softmax':
-                tlayer = 's'
-            elif layer.act == 'hidden':
-                tlayer = 'h'
-            elif layer.act == 'recursive':
-                tlayer = 'v'
-            else:
-                print "error"
-                return layer
-            tmp = struct.pack('c', tlayer)
-
-            f.write(tmp)
-            bidx = -1
-            if layer.bidx != None:
-                bidx = layer.bidx
-                bidx = bidx[0]
-
-            tmp = struct.pack('i', bidx)
-            f.write(tmp)
-
-    #########################
-    # connections
-    for layer in layers:
-        for xupid, con in enumerate(layer.connectUp):
-            # xlayer idx
-            tmp = struct.pack('i', layer.idx)
-
-            f.write(tmp)
-            # ylayer idx
-            tmp = struct.pack('i', con.ylayer.idx)
-            f.write(tmp)
-            # idx in x's connectUp
-            tmp = struct.pack('i', xupid)
-            f.write(tmp)
-            # idx in y's connectDown
-            tmp = struct.pack('i', con.ydownid)
-            f.write(tmp)
-            if con.ylayer.layer_type == 'p':
-                Widx = -1
-            else:
-                Widx = con.Widx
-                Widx = Widx[0]
-
-            tmp = struct.pack('i', Widx)
-            f.write(tmp)
-            if Widx >= 0:
-                tmp = struct.pack('f', con.Wcoef)
-                f.write(tmp)
-def generateTrain_CV_Test():
-    # generate data for training, validation and testing
-    datafiles = params.datafiles
-
-    train_net = []
-    test_net = []
-    # training
-    net = constructNetFromJson(jsonFile=datafiles['train_nonvirus'], labelclass=1)
-    train_net.extend(net)
-    net = constructNetFromJson(jsonFile=datafiles['train_virus'], labelclass=2)
-    train_net.extend(net)
-    # testing
-    net = constructNetFromJson(jsonFile=datafiles['test_nonvirus'], labelclass=1)
-    test_net.extend(net)
-    net = constructNetFromJson(jsonFile=datafiles['test_virus'], labelclass=2)
-    test_net.extend(net)
-    # # write network
-    # np.random.seed(314159)
-    # np.random.shuffle(networks)
-    #
-    # print 'networks =',len(networks)
-    # numTrain = int(.7 * len(networks))
-    print 'numTrain : ', len(train_net)
-    print 'numTest : ', len(test_net)
-    np.random.shuffle(train_net)
-
-    f = file(datapath + 'xy/' + 'data_train', 'wb')
-    f_y = file(datapath + 'xy/' + 'data_ytrain.txt', 'w')
-    for i in xrange(0, len(train_net)):
-        (net, ti) = train_net[i]
-        # write net
-        GraphData_IO.WriteNet(f, net)
-        # print ti
-        f_y.write(str(ti) + '\n')
-    f.close()
-    f_y.close()
-
-    f = file(datapath + 'xy/' + 'data_test', 'wb')
-    f_y = file(datapath + 'xy/' + 'data_ytest.txt', 'w')
-    for i in xrange(0, len(test_net)):
-        (net, ti) = test_net[i]
-        # write net
-        GraphData_IO.WriteNet(f, net)
-        # write ti
-        f_y.write(str(ti) + '\n')
-    f.close()
-    f_y.close()
-
-    print 'Done!!'
-
+            count +=1
+    return jsonObjs
 
 if __name__ == "__main__":
 
-    path ='C:/Users/anhpv/Desktop/CFG/Experiment/'
     path ='C:/Users/anhpv/Desktop/CFG/'
-    fold ='Training/'
-    name= 'GCNN'
-    datapath = path+fold
+    # fold ='Training/'
+    # name= 'GCNN'
+    # datapath = path+fold
 
     # datapath='C:/Users/anhpv/Desktop/CFG/DataForCheckImp/'
     # writeGraph2Json(datapath+name+'/', datapath+name+'.json')
@@ -376,9 +235,9 @@ if __name__ == "__main__":
     #     #json.dumps([o.dump() for o in my_list_of_ipport])
     #     json.dump([json_object], outfile)
     # # print json_object
-    with open(path + 'test.json', 'r') as outfile:
-        json_object = json.load(outfile)
-        g= Graph.load(json_object[0])
-        g.show()
+    # with open(path + 'test.json', 'r') as outfile:
+    #     json_object = json.load(outfile)
+    #     g= Graph.load(json_object[0])
+    #     g.show()
     # path = 'C:/Users/anhpv/Desktop/CFG/'
     # g = getGraph(path + 'check1.dot')

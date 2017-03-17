@@ -1,5 +1,8 @@
 
 import os, sys, numpy as np, copy
+
+import common_params
+
 sys.path.append('../')
 
 # from InitTreeConvolution import *
@@ -32,7 +35,7 @@ numOut = gl.numOut
 numFea = gl.numFea
     
     # numSen = 10
-tokenMap = p.load(open(gl.tokenMap))
+tokenMap = common_params.tokenMap
 tokenNum = len(tokenMap)
    
 numPool = 3

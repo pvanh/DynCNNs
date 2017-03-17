@@ -1,19 +1,17 @@
+import commonFunctions
+import common_params
 import constructNetWork_RNN as TC
 import cPickle as p
-from nn import serialize
 
-import nn
-import pycparser
-from nn import FFNN
-import sys, os
+import sys
+
+import write_param
 
 sys.path.append('../nn')
-from pycparser import c_parser, c_ast, parse_file
 
 from InitParam import *
 
 import gl
-from nn import Token
 import numpy as np
 
 sys.setrecursionlimit(1000000)
@@ -21,7 +19,7 @@ sys.setrecursionlimit(1000000)
 numFea = gl.numFea
 numRecur = gl.numCon
 
-tokenMap = p.load(open(gl.tokenMap))
+tokenMap = common_params.tokenMap
 tokenNum = len(tokenMap)
 numWords = len(tokenMap)
 numDis = gl.numDis
@@ -111,23 +109,15 @@ print 'Bias', len(Biases)
 gradWeights = np.zeros_like(Weights)
 gradBiases = np.zeros_like(Biases)
 
+print 'numDis', numDis
+print 'numRecur', numRecur
+print 'numOut', numOut
+print 'Weights', len(Weights)
+print 'Bias', len(Biases)
 
-def computeLeafNum(root, nodes, depth=0):
-    if len(root.children) == 0:
-        root.leafNum = 1
-        root.childrenNum = 1
-        return 1, 1, depth  # leafNum, childrenNum
-    root.allLeafNum = 0
-    avgdepth = 0.0
-    for child in root.children:
-        leafNum, childrenNum, childAvgDepth = computeLeafNum(nodes[child], nodes, depth + 1)
-        root.leafNum += leafNum
-        root.childrenNum += childrenNum
-        avgdepth += childAvgDepth * leafNum
-    avgdepth /= root.leafNum
-    root.childrenNum += 1
-    return root.leafNum, root.childrenNum, avgdepth
-
+paramsFile = common_params.xypath+ '../paramTest_RvNN_Recur'+ str(gl.numCon)+'_Dis'+str(gl.numDis)
+write_param.write_binary(paramsFile, Weights, Biases)
+print 'Parameters have been saved at: ', paramsFile
 
 def InitByNodes(nodes):
     # add more infomation
@@ -155,7 +145,7 @@ def InitByNodes(nodes):
                     nodes[child].rightRate = nodes[child].pos / (lenchildren - 1.0)
                     nodes[child].leftRate = 1.0 - nodes[child].rightRate
 
-    dummy, dummy, avgdepth = computeLeafNum(nodes[-1], nodes)
+    dummy, dummy, avgdepth = commonFunctions.computeLeafNum(nodes[-1], nodes)
     # print 'avgdepth', avgdepth
     avgdepth *= .6
     if avgdepth < 1:
@@ -169,116 +159,3 @@ def InitByNodes(nodes):
                                          )
     return layers
 
-
-def ConstructNodes(ast, name, parent, pos, nodes, leafs):
-    # global tmpCnt
-    if name == None:
-        name = ast.__class__.__name__
-    # if name not in tmptokenMap.keys():
-    #        tmptokenMap[name] = tmpCnt
-    #        tmpCnt += 1
-    if gl.reConstruct:
-        if name == 'For' or name == 'While' or name == 'DoWhile':
-            name = 'For'  # Loop (Consider For, While, DoWhile as For)
-    Node = Token.token(name, gl.numFea * tokenMap[name], \
-                       parent, pos)
-    if len(ast.children()) == 0:
-        leafs.append(Node)
-    else:
-        nodes.append(Node)
-    # print nodes[0].word
-    curid = len(nodes)
-    for idx, (name, child) in enumerate(ast.children()):
-        ConstructNodes(child, None, curid, idx, nodes, leafs)
-        # def __init__(self, word, bidx, parent, pos = 0):
-
-
-def AdjustOrder(nodes):
-    nodes.reverse()
-    length = len(nodes)
-    for node in nodes:
-        if node.parent != None:
-            node.parent = length - node.parent
-
-
-import func_defs
-
-
-def GetMajorFunction(root):
-    v = func_defs.FuncDefVisitor()
-    v.visit(root)
-    nodes = v.nodes;
-
-    major = nodes[0]
-    for cnode in nodes:
-        if (major.NodeNum() < cnode.NodeNum()):
-            major = cnode
-    return major;
-
-def InitNetbyText(text=''):
-    parser = pycparser.c_parser.CParser()
-    ast = parser.parse(text=text)  # Parse code to AST
-    if gl.reConstruct:  # reconstruct braches of For, While, DoWhile
-        ast.reConstruct()
-
-    nodes = []
-    leafs = []
-    # print 'constructing the network'
-    ConstructNodes(ast, 'root', None, None, nodes, leafs)
-    # print len(nodes)
-    # print nodes[0].word
-    nodes.extend(leafs)
-    # print len(nodes)
-    AdjustOrder(nodes)
-    # print '---------------------------------------'
-    for ii in xrange(len(nodes)):
-        # print ii
-        inode = nodes[ii]
-        # print ii,'  ',inode.word,'  ',inode.parent,'  ',nodes[inode.parent].word,'  ',inode.pos
-    layers = InitByNodes(nodes)
-
-    return layers
-
-
-if __name__ == "__main__":
-    procount = 0;
-    for subdir in os.listdir(gl.datadir):
-        if not subdir.endswith('/'):
-            subdir = subdir + '/'
-
-        count = 0
-        procount += 1
-        print '!!!!!!!!!!!!!!!!!!  procount = ', procount
-        # if procount >3:
-        #    break
-        for onefile in os.listdir(gl.datadir + subdir):
-
-            # print 'oneoneoneoneone!!!!!!!!!! '
-            filename = onefile
-            onefile = gl.datadir + subdir + onefile
-            try:
-                # print '-----------------', onefile, '-----------------'
-                # ast = parse_file(onefile, use_cpp=True)
-                if onefile.endswith(".txt"):
-                    instream = open(onefile, 'r')
-                    text = instream.read()
-                    instream.close()
-
-                    layers = InitNetbyText(text=text)
-
-                    count += 1
-                    # print 'count = ',count
-                    if count > 500:
-                        break
-
-                    directory = gl.targetdir + subdir
-                    if not os.path.exists(directory):
-                        os.makedirs(directory)
-                    serialize.serialize(layers, directory + '/seri_' + filename)
-
-            except:
-                print 'ooooops, parsing error for', onefile
-                continue
-
-    print 'Done!!!!!!'
-    print 'procount = ', procount

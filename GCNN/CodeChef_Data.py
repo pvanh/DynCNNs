@@ -117,7 +117,8 @@ def ReadData():
     print '# Instances:', len(ast_data)
 
 def generateTrain_CV_Test(datafile='', type ='AST'):
-
+    # Read Json File, Split into Train, CV, Test
+    # type = AST or Graph
     with open(datafile, 'r') as f:
         jsonObjs = json.load(f)
 
@@ -160,14 +161,20 @@ def showTree(node, offset=0):
     for child in node.descendants:
         showTree(child, offset=offset + 2)
 if __name__ =='__main__':
-    text ='''
-    int main()
-    {
-        int x=3;
-        if (x+2>3)
-            print ("hello");
-    }
-    '''
+    # read data from crawler directory, parse to AST, Save in Json format
+    ReadData()
+    # split into Train -CV - Test
+    generateTrain_CV_Test(datapath+problem+astjson, type='AST')
+    generateTrain_CV_Test(datafile=datapath+problem+graphjson, type='Graph')
+
+    # text ='''
+    # int main()
+    # {
+    #     int x=3;
+    #     if (x+2>3)
+    #         print ("hello");
+    # }
+    # '''
     # text=[]
     # text.append('/*Name: Pham Ngoc Cuong')
     # text.append('ID:se04888')
@@ -205,12 +212,6 @@ if __name__ =='__main__':
     # from newick import loads
     # root = loads(text)
     # showTree(root[0],0)
-
-    # read data from crawler directory
-    # ReadData()
-    # split into Train -CV - Test
-    generateTrain_CV_Test(datapath+problem+astjson, type='AST')
-    generateTrain_CV_Test(datafile=datapath+problem+graphjson, type='Graph')
     print 'Done'
 
 

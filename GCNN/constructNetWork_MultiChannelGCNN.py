@@ -36,7 +36,8 @@ class Vinfo:
         print str(self.numOut()),'\n\n'
 
 
-def ConstructGraphConvolution(graph,word_dict,numView, numFea, numCon, numDis, numOut, \
+def ConstructGraphConvolution(graph,word_dict,numView, numFea, numMap, numCon, numDis, numOut, \
+                             Wmap, Bmap,
                              Wconv_root, Wconv_in, Wconv_out, Bconv, \
                              Wdis, Woutput, Bdis, Boutput
                              ):
@@ -82,28 +83,58 @@ def ConstructGraphConvolution(graph,word_dict,numView, numFea, numCon, numDis, n
 
     layers=[]
 
-    emb_layers =[None] * numView
-    for view in range(0, numView):
-        emb_layers[view] = [None] * numVertexes
-        # construct the embedding layer for each vertex
-        for idx in xrange(numVertexes):
-            # get vertex
-            vinfor = vertexes_info[idx]
-            token = vinfor.data[view] # get the token of the current view
-            if token in word_dict:
-                bidx = word_dict[token] * numFea
-            else:
-                bidx =0
-            emb_layers[view][idx] = Lay.layer('vec_' + str(idx) + '_' + token, \
-                                    range(bidx, bidx + numFea), \
-                                    numFea
-                                    )
-            emb_layers[view][idx].act = 'embedding'
+    tmpnumMap =[numFea]
+    tmpnumMap.extend(numMap)
+    lenMap = len(numMap)
 
-            layers.append(emb_layers[view][idx])
+    emb_layers = (lenMap+1)*[None] # embedding & mapping layers
+    for m in range(0, lenMap+1): #embedding & mapping layers
+        emb_layers[m] = numView*[None]
+        for v in range(0, numView):
+            emb_layers[m][v] = [None]* numVertexes
+    for m in range(0, lenMap + 1):
+        if m==0: # embedding
+            name ='vec_'
+            act = 'embedding'
+        else:
+            name ='map'+str(m)+'_'
+            act = 'hidden'
+        for view in range(0, numView):
+            # emb_layers[view] = [None] * numVertexes
+            # construct the embedding layer for each vertex
+            for idx in xrange(numVertexes):
+                # get vertex
+                vinfor = vertexes_info[idx]
+                token = vinfor.data[view] # get the token of the current view
+                if m==0: # embedding
+                    if token in word_dict:
+                        bidx = word_dict[token] * numFea
+                    else:
+                        bidx =0
+                    emb_layers[m][view][idx] = Lay.layer(name + str(idx) + '_' + token, \
+                                            range(bidx, bidx + numFea), \
+                                            numFea
+                                            )
+                else:
+                    emb_layers[m][view][idx] = Lay.layer(name + str(idx) + '_' + token, \
+                                                         Bmap[m-1][view], numMap[m-1])
+                emb_layers[m][view][idx].act = act
+                # connect from previous ---> current
+                if m>0:
+                    mapCon = Con.connection(emb_layers[m-1][view][idx], emb_layers[m][view][idx], tmpnumMap[m-1], tmpnumMap[m], Wmap[m-1][view])
+    # add embedding and mapping layers to Layers
+    for m in range(0, lenMap+1):
+        for v in range(0, numView):
+            for idx in range(0, numVertexes):
+                layers.append(emb_layers[m][v][idx])
 
-    pre_layer ={}
-    num_Pre = numFea # the size of previous layers
+    if lenMap==0:
+        num_Pre = numFea # the size of previous layers
+    else:
+        num_Pre = numMap[-1]
+
+    pre_layer = emb_layers[-1]
+
     for c in xrange(len(numCon)): # convolutional layers
         current_layer ={} # current layer
         for idx in xrange (numVertexes):
@@ -119,7 +150,7 @@ def ConstructGraphConvolution(graph,word_dict,numView, numFea, numCon, numDis, n
             # add connections
             if c==0: # all views of embedding ---> convolution 1
                 for v in range(0, numView):
-                    rootCon = Con.connection(emb_layers[v][idx], conLayer, num_Pre, numCon[c], Wconv_root[c][v])
+                    rootCon = Con.connection(pre_layer[v][idx], conLayer, num_Pre, numCon[c], Wconv_root[c][v])
                     # add connections
                     dsum_innodes, dsum_outnodes = n_degrees[idx]
 
@@ -127,12 +158,12 @@ def ConstructGraphConvolution(graph,word_dict,numView, numFea, numCon, numDis, n
                         # print token, vertexes_info[n].inDegree(), ',', vertexes_info[n].outDegree(), ',', n_sumDegree
                         Wcoef = 1.0* (vertexes_info[n].inDegree()+vertexes_info[n].outDegree())/ dsum_outnodes
                         if Wcoef !=0:
-                            neighborCon = Con.connection(emb_layers[v][n], conLayer, num_Pre, numCon[c], Wconv_out[c][v],Wcoef = Wcoef)
+                            neighborCon = Con.connection(pre_layer[v][n], conLayer, num_Pre, numCon[c], Wconv_out[c][v],Wcoef = Wcoef)
                     for n in vinfor.income: # outgoing nodes
                         # print token, vertexes_info[n].inDegree(), ',', vertexes_info[n].outDegree(), ',', n_sumDegree
                         Wcoef = 1.0* (vertexes_info[n].inDegree()+vertexes_info[n].outDegree())/ dsum_innodes
                         if Wcoef !=0:
-                            neighborCon = Con.connection(emb_layers[v][n], conLayer, num_Pre, numCon[c], Wconv_in[c][v],Wcoef = Wcoef)
+                            neighborCon = Con.connection(pre_layer[v][n], conLayer, num_Pre, numCon[c], Wconv_in[c][v],Wcoef = Wcoef)
             else:
                 rootCon = Con.connection(pre_layer[idx], conLayer, num_Pre, numCon[c], Wconv_root[c])
                 # add connections

@@ -32,6 +32,11 @@ extern char * buf_train;
 extern char * buf_CV;
 extern char * buf_test;
 
+int m_nEpoch;
+float m_alpha;
+float m_CVacc =0.0;
+float * m_weights, * m_biases; // weights and biases at max accuracy of CV
+
 Layer ** global;
 int main(int argc, char* argv[]){
 	// read parameters from setting file
@@ -95,7 +100,9 @@ int main(int argc, char* argv[]){
 
 
 	//ReadIndex("samplepath");
-
+	m_weights = (float*)malloc(num_weights*sizeof(float));
+	m_biases = (float*)malloc(num_biases*sizeof(float));
+	
 	for(int i = 0; i< num_weights; i++){
 		Wcoef_AdaGrad[i] = K;
 	}
@@ -123,6 +130,7 @@ int main(int argc, char* argv[]){
 	f_ytest = (char*) malloc(sizeof(char) * 300) ;
 	snprintf( f_ytest , 300, "./xy/%s",params[31]);
 	
+	getActiveFunction(params[37]);
 	ReadAllData();
 	cout << "INFO: Data loaded" << endl;
 	// check x train, cv, test
@@ -137,7 +145,7 @@ int main(int argc, char* argv[]){
 	//ReadTrainNetwork(7);
 	cout<<num_weights<<endl;
 	
-	 int tobegin = atoi(params[3]);
+	int tobegin = atoi(params[3]);
 	if(tobegin != 1){
 	    readTBCNNParam2(tobegin,alpha,n_miniGDchange);
 	    n_miniGD = tobegin*num_train/batch_size;
@@ -223,13 +231,21 @@ int main(int argc, char* argv[]){
 			if (i == num_train-1) {
 				cout << "Epoch = "<< epoch<<" i = "<<i;
 				
-				predictCV(y_CV, num_CV, NULL, NULL,0);
+				float CVacc = predictCV(y_CV, num_CV, NULL, NULL,0);
 				predictTest(y_test, num_test, NULL,NULL,0);
 				
 				cout <<  "  trainerror : " <<  J / n_train<<"  train accuracy : "<<train_correct/n_train<< endl;
 				n_train = 0;J = 0;
 				train_correct = 0;
-
+				
+				if (CVacc>m_CVacc) // save weights, biases at the current max point
+				{
+					m_CVacc = CVacc;
+					m_nEpoch = epoch;
+					m_alpha = alpha;
+					memcpy(m_weights,weights, num_weights*sizeof(float));
+					memcpy(m_biases,biases, num_biases*sizeof(float));	
+				}
 			}
 
 			//cout<<"test and cv finished"<<endl;
@@ -307,10 +323,6 @@ int main(int argc, char* argv[]){
 			//cout<<"end propagetion"<<endl;
 
 
-
-
-
-
 			if (n_sample % batch_size == 0){
 				learn_rate = alpha / (1 + beta * n_miniGD);
 				if(n_miniGDchange)++ n_miniGD;
@@ -319,18 +331,6 @@ int main(int argc, char* argv[]){
 				//float biases_decay = 1 - learn_rate * C_weights;
 				cblas_sscal(num_weights, weight_decay, weights, 1);
 				//cblas_sscal(num_biases, biases_decay, biases, 1);
-
-
-				//memset(gradWeights, 0, sizeof(float) * 180000);
-				//memset(gradBiases,  0, sizeof(float) * 62817900);
-				/*
-				for (int ii = 0;ii<1544;ii++)
-				{
-					cout<<gradWeights[ii]<<endl;
-				}
-				cout<<endl;
-				*/
-				//return 0;
 
 				GradDescent(num_weights, learn_rate / batch_size , gradWeights, weights);
 				GradDescent(num_biases,  learn_rate / batch_size, gradBiases, biases);
@@ -349,7 +349,12 @@ int main(int argc, char* argv[]){
 //		SaveParam( des );
 
 	}
-	saveTBCNNParam2(nEpoch,alpha,n_miniGDchange);
+	// save parameters at the max accuracy of CV
+	printf("\n Save params at epoch: %d", m_nEpoch);
+	memcpy(weights, m_weights, num_weights*sizeof(float));
+	memcpy(biases,m_biases, num_biases*sizeof(float));
+	saveTBCNNParam2(m_nEpoch,m_alpha,n_miniGDchange);
+	
 	int t_stop =clock();
 	cout<<"\nrunning time: "<< t_stop - t_start;
 	cout << "\ndone" << endl;

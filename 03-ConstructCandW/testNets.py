@@ -3,11 +3,8 @@ import pycparser
 
 gl.reConstruct= False # reconstruct For, While, DoWhile
 gl.ignoreDecl = False # Ignore declaration branches
-# import main_TBCNN_Sib as NetConstruct
-# import main_TBCNN as NetConstruct
-# import main_RNN as NetConstruct
-# import main_RNN_Sib as NetConstruct
-import main_TBCNN as NetConstruct
+
+import writeXY_Train_CV_Test as NetConstruct
 text ='''
 
 int visited[5][8];
@@ -58,12 +55,10 @@ int main() {
 
 '''
 
-# text ='''
-# int main()
-# {
-#     int a = 3;
-# }
-# '''
+text ='''
+    int a = 3;
+
+'''
 
 #
 # text ='''
@@ -81,30 +76,33 @@ if gl.reConstruct:  # reconstruct braches of For, While, DoWhile
     ast.reConstruct()
 print 'AST:'
 ast.show()
+ast_str = []
+ast.toNewickFormat(value=ast_str)
+ast_str = ''.join(ast_str)
 
-# print '\n\nNetworks:'
-# layers = NetConstruct.InitNetbyText(text = text)
-# print 'Totally:', len(layers), 'layer(s)'
-# for l in layers:
-#     if hasattr(l,'bidx') and l.bidx is not None:
-#         print l.name, '\tBidx', l.bidx[0], '\tlen biases=', len(l.bidx)
-#     else:
-#         print l.name
-#     # print "    Up:"
-#     # for c in l.connectUp:
-#     #     if hasattr(c,'Widx'):
-#     #         print "        ", c.xlayer.name, " -> ", c.ylayer.name, \
-#     #             '(xnum= ', c.xnum, ', ynum= ', c.ynum,'), weights = ', len(c.Widx)
-#     #     else:
-#     #         print "        ", c.xlayer.name, " -> ", c.ylayer.name, \
-#     #             '(xnum= ', c.xnum, ', ynum= ', c.ynum, ')'
-#
-#     print "    Down:"
-#     for c in l.connectDown:
-#         if hasattr(c,'Widx'):
-#             print "        ", c.xlayer.name, " -> ", '|', \
-#                 '(xnum= ', c.xnum, ', ynum= ', c.ynum,'), Wid = ', c.Widx[0]
-#         else:
-#             print "        ", c.xlayer.name, " -> ", '|', \
-#                 '(xnum= ', c.xnum, ', ynum= ', c.ynum, ')'
+print '\n\nNetworks:'
+layers = NetConstruct.InitNetbyText(text = ast_str)
+print 'Totally:', len(layers), 'layer(s)'
+for l in layers:
+    if hasattr(l,'bidx') and l.bidx is not None:
+        print l.name, '\tBidx', l.bidx[0], '\tlen biases=', len(l.bidx)
+    else:
+        print l.name
+    # print "    Up:"
+    # for c in l.connectUp:
+    #     if hasattr(c,'Widx'):
+    #         print "        ", c.xlayer.name, " -> ", c.ylayer.name, \
+    #             '(xnum= ', c.xnum, ', ynum= ', c.ynum,'), weights = ', len(c.Widx)
+    #     else:
+    #         print "        ", c.xlayer.name, " -> ", c.ylayer.name, \
+    #             '(xnum= ', c.xnum, ', ynum= ', c.ynum, ')'
+
+    print "    Down:"
+    for c in l.connectDown:
+        if hasattr(c,'Widx'):
+            print "        ", c.xlayer.name, " -> ", '|', \
+                '(xnum= ', c.xnum, ', ynum= ', c.ynum,'), Wid = ', c.Widx[0]
+        else:
+            print "        ", c.xlayer.name, " -> ", '|', \
+                '(xnum= ', c.xnum, ', ynum= ', c.ynum, ')'
 

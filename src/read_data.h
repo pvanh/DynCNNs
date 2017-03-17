@@ -10,6 +10,7 @@
 
 #include"global.h"
 #include"FFNN.h"
+void getActiveFunction(char* name);
 Layer ** ReadOneNet(char * filepath, int& len);
 void ReadIndex(char * datapath);
 void ReadAllData();

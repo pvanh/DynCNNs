@@ -3,9 +3,9 @@ import random
 
 import GraphData_IO
 
-# datapath ='C:/Users/anhpv/Desktop/CFG/GraphJson/'
+datapath ='C:/Users/anhpv/Desktop/CFG/Experiment/5Folds/'
 # datapath ='D:/JsonAST_Graph/'
-datapath ='D:/CodeChef/clone/'
+# datapath ='D:/CodeChef/clone/'
 # datapath = 'D:/CodeChef/clone/'
 # load token types dictionary
 toktypeDict = None
@@ -18,8 +18,8 @@ numDis = 600
 numOut = 2
 
 numView =1
-numCon =[30,600]
-
+numCon =[600,600]
+numMap =[] # mapping layer
 # datafiles ={}
 # datafiles['train_virus'] = datapath+'Training/GCNN.json'
 # datafiles['train_nonvirus'] = datapath+'Training/NonVirus.json'

@@ -1,5 +1,7 @@
 import os, sys, numpy as np, copy
 
+import common_params
+
 sys.path.append('../')
 
 # from InitTreeConvolution import *
@@ -32,7 +34,7 @@ numOut = gl.numOut
 numFea = gl.numFea
 
 # numSen = 10
-tokenMap = p.load(open(gl.tokenMap))
+tokenMap = common_params.tokenMap
 tokenNum = len(tokenMap)
 
 numPool = 3
@@ -131,11 +133,12 @@ Biases = Biases.reshape((-1, 1))
 print Weights[1], Weights[2], Weights[3], Weights[4], Weights[5]
 print 'numDis', numDis
 print 'numCon', numCon
+print 'numOut', numOut
 print 'Weights', len(Weights)
 print 'Bias', len(Biases)
 # dwadwad
 # 17940
 # 1544
-#
-write_param.write_binary('../paramTest_Conv30_Dis20', Weights, Biases)
+
+write_param.write_binary('../paramTest_TBCNN_Conv'+ str(gl.numCon)+'_Dis'+str(gl.numDis), Weights, Biases)
 print 'Done!'

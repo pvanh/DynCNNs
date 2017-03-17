@@ -1,11 +1,11 @@
 import sys
+from newick import loads
 
 class Node:
     content = None
     parent = None
     children = None
     pos = 0
-
     def __init__(self, content, parent, children):
         self.content = content
         self.parent = parent
@@ -40,9 +40,23 @@ def LoadTree(filename=None): # stanford parse tree format
         parent.children.append(child)
 
     return nodes['root']
-def loadNewickTree():
-    
-    return ''
+
+def loadNewickTree(text):
+    newick_root = loads(text)
+    root = Node('', None, None)
+    convertFromNewIck(root, newick_root[0])
+    return root
+def convertFromNewIck(parent,newick_node):
+    if parent.content=='':
+        parent.content = str(newick_node.name)
+        c_node = parent
+    else:
+        c_node = Node(str(newick_node.name), parent=parent, children=None)
+        parent.children.append(c_node)
+    for child in newick_node.descendants:
+        convertFromNewIck(c_node, child)
+
+
 def LoadTokenMap(tokfile=None):
     reader = open(tokfile, 'r')
     tokenMap ={}
@@ -55,3 +69,7 @@ def LoadTokenMap(tokfile=None):
                 tokenMap[word] = len(tokenMap)
 
     return tokenMap
+
+# text ='(((((IdentifierType)TypeDecl)FuncDecl)Decl,(((IdentifierType)TypeDecl)Decl,(ID,ID)BinaryOp,((ID)UnaryOp,(((IdentifierType)TypeDecl)Decl,(ID,ID)BinaryOp,(((IdentifierType)TypeDecl,ID)ArrayDecl)Decl,((((IdentifierType)TypeDecl,Constant)Decl)DeclList,(ID,ID)BinaryOp,(ID)UnaryOp,((ID,(ID,ID)ArrayRef)BinaryOp,(ID,(ID,(ID,ID)BinaryOp)ExprList)FuncCall)Compound)For,((ID,((ID,Constant)ArrayRef,(ID,Constant)BinaryOp)BinaryOp)BinaryOp,ID)BinaryOp)Compound)While,(Constant)Return)Compound)FuncDef)FileAST'
+# root = loadNewickTree(text)
+# root.show()

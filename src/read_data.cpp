@@ -26,14 +26,6 @@ char * buf_CV= new char [MAX_BUF];
 char * cursor_CV;
 char * buf_test= new char [MAX_BUF];
 char * cursor_test;
-//char *config = "RNNBigDataFinal600";
-//data files
-//const char * f_train = "./xy/data_train";
-//const char * f_CV = "./xy/data_CV";
-//const char * f_test = "./xy/data_test";
-//const char * f_yCV = "./xy/data_yCV.txt";
-//const char * f_ytest = "./xy/data_ytest.txt";
-//const char * f_ytrain = "./xy/data_ytrain.txt";
 
 char * f_train;
 char * f_CV;
@@ -41,7 +33,24 @@ char * f_test;
 char * f_yCV;
 char * f_ytest;
 char * f_ytrain;
+void (* act_f)( float *z, float *y, int n); // activation function, y = f(z)
+void (* act_fprime)( float * y, float * dy_dz, int n);// derivative
+void getActiveFunction(char* name)
+{
+	act_f = tanh;
+	act_fprime = tanhPrime;
+	char * act_name = (char*)malloc(200*sizeof(char)) ;
+	strcpy(act_name, "tanh");
 	
+	if (strcmp(name, "ReLU")==0)
+	{
+		act_f = ReLU;
+		act_fprime = ReLUPrime;		
+		strcpy(act_name, "ReLU");
+	}
+	printf("\nActivation function: %s\n", act_name);
+	
+}	
 void DeleteClass(Layer ** layers, int len){
 	if (layers == NULL)
 			return;
@@ -295,31 +304,31 @@ void ConstructNetFromBuf( Layer ** & one_net, int & len, char * & cursor){
 			bidx = * ((int *) cursor);  cursor += sizeofint;
 //			fread( & bidx, sizeofint, 1, infile );
 			if( activation == 'r' ){ // relu
-				one_net[i] = new Layer( "relu", numUnit, bidx, numUp, numDown, tanh, tanhPrime);
+				one_net[i] = new Layer( "relu", numUnit, bidx, numUp, numDown, act_f, act_fprime);
 			}
 			else if( activation == 'c' ){ // drop and relu
-				one_net[i] = new Layer( "con", numUnit, bidx, numUp, numDown, tanh, tanhPrime);
+				one_net[i] = new Layer( "con", numUnit, bidx, numUp, numDown, act_f, act_fprime);
 
 			}
 			else if( activation == 'v' ){ // recursive
-				one_net[i] = new Layer( "recursive", numUnit, bidx, numUp, numDown, tanh, tanhPrime);
+				one_net[i] = new Layer( "recursive", numUnit, bidx, numUp, numDown, act_f, act_fprime);
 			}
-			else if( activation == 'a' ){ // tanh
-				one_net[i] = new Layer( "ae", numUnit, bidx, numUp, numDown, tanh, tanhPrime);
+			else if( activation == 'a' ){ 
+				one_net[i] = new Layer( "ae", numUnit, bidx, numUp, numDown, act_f, act_fprime);
 			}
-			else if( activation == 'b' ){ // tanh
-							one_net[i] = new Layer( "combination", numUnit, bidx, numUp, numDown, tanh, tanhPrime);
+			else if( activation == 'b' ){ 
+							one_net[i] = new Layer( "combination", numUnit, bidx, numUp, numDown, act_f, act_fprime);
 						}
 			else if( activation == 's') { // softmax
 				one_net[i] = new Layer( "softmax", numUnit, bidx, numUp, numDown, Softmax, dummy);
 			}
-			else if( activation == 'e'){ // tanh
-				one_net[i] = new Layer( "embed", numUnit, bidx, numUp, numDown, tanh, tanhPrime);
+			else if( activation == 'e'){ 
+				one_net[i] = new Layer( "embed", numUnit, bidx, numUp, numDown, act_f, act_fprime);
 				delete one_net[i]->z;
 				one_net[i]->z = NULL;
 			}
 			else if( activation == 'h'){ // dropout and relu
-				one_net[i] = new Layer( "hidden", numUnit, bidx, numUp, numDown, tanh, tanhPrime);
+				one_net[i] = new Layer( "hidden", numUnit, bidx, numUp, numDown, act_f, act_fprime);
 			}
 
 		}

@@ -17,7 +17,8 @@
 
 
 import sys
-import gl
+
+import common_params
 
 
 class Node(object):
@@ -35,7 +36,7 @@ class Node(object):
         return nodenum
     def IsDecl(self):
         #return False
-        if type(self) is Decl and gl.ignoreDecl== True:# or type(self) is ID or type(self) is Constant or type(self) is UnaryOp:
+        if type(self) is Decl and common_params.ignoreDecl== True:# or type(self) is ID or type(self) is Constant or type(self) is UnaryOp:
             return True
         else:
             return False

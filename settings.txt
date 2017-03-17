@@ -1,7 +1,7 @@
 batch
-100
+10
 begin
-0
+1
 num of epoch
 59
 mark point to write output
@@ -9,25 +9,31 @@ mark point to write output
 mode (type of output data)
 0
 num_train
-31200
+5691
 num_cv
-10400
+1897
 num_test
-10400
+1897
 output
-104
+2
 parameter file
-paramTest
-fx_train (x -training file)
-data_train
-fx_CV (x - validation file)
-data_CV
-fx_test (x - test file)
-data_test
-fy_train (y - training file)
-data_ytrain.txt
-fy_CV (y- validation file)
-data_yCV.txt
-fy_test (y- test file)
-data_ytest.txt
+paramTest_ASTGraph_V2
+fx_train  (x -training file)
+MNMX_tbcnn_Xtrain
+fx_CV     (x - validation file)
+MNMX_tbcnn_XCV
+fx_test   (x - test file)
+MNMX_tbcnn_Xtest
+fy_train  (y - training file)
+MNMX_tbcnn_Ytrain.txt
+fy_CV     (y- validation file)
+MNMX_tbcnn_YCV.txt
+fy_test   (y- test file)
+MNMX_tbcnn_Ytest.txt
+alpha
+0.1
+beta
+0.7
+active function(ReLu, tanh)
+tanh
 // p1: epoch, p2: mark - export from this round, mode: 0 - export probabilities, 1- predicting results, 2-vector
